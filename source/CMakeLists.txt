@@ -1,19 +1,21 @@
 cmake_minimum_required(VERSION 3.0.2)
 
 project(qt_thing)
+SET (CMAKE_CXX_COMPILER             "/usr/bin/clang++")
+set(CMAKE_CXX_FLAGS "-ggdb -std=c++14")
 
-# Find the QtWidgets library
 find_package(Qt5Widgets)
 
-# Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-# Instruct CMake to run moc automatically when needed.
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 
 
-# Tell CMake to create the helloworld executable
-add_executable(qt_thing_app main.cpp)
+add_library(main_win main_win.cpp)
+target_link_libraries(main_win Qt5::Widgets)
 
-# Use the Widgets module from Qt 5.
-target_link_libraries(qt_thing_app Qt5::Widgets)
+
+add_executable(qt_thing_app main.cpp)
+target_link_libraries(qt_thing_app main_win)
+
+

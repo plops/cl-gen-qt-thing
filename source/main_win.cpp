@@ -1,11 +1,8 @@
-#include <QApplication>
-#include <QWidget>
-explicit Widget(QWidget *parent = nullptr) : QWidget(parent), ui(new Widget) {
+#include "main_win.h"
+#include "ui_main_win.h"
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
 }
 
-~Widget() { delete ui; }
-
-void setName(const QString &name) { ui->lineEdit->setText(name); }
-
-name() const { return ui->lineEdit->text(); }
+MainWindow::~MainWindow() { delete ui; }
