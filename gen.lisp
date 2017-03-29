@@ -4,6 +4,28 @@
 
 (in-package :cl-cpp-generator)
 
+#+nil (with-open-file (s "~/stage/cl-gen-qt-thing/source/main_win.ui")
+ (xmls:parse s))
+#+nil
+("ui" (("version" "4.0")) ("class" nil "MainWindow")
+    ("widget" (("name" "MainWindow") ("class" "QMainWindow"))
+     ("property" (("name" "geometry"))
+      ("rect" nil ("x" nil "0") ("y" nil "0") ("width" nil "400")
+       ("height" nil "300")))
+     ("property" (("name" "windowTitle")) ("string" nil "MainWindow"))
+     ("widget" (("name" "centralWidget") ("class" "QWidget")))
+     ("widget" (("name" "menuBar") ("class" "QMenuBar"))
+      ("property" (("name" "geometry"))
+       ("rect" nil ("x" nil "0") ("y" nil "0") ("width" nil "400")
+        ("height" nil "29"))))
+     ("widget" (("name" "mainToolBar") ("class" "QToolBar"))
+      ("attribute" (("name" "toolBarArea")) ("enum" nil "TopToolBarArea"))
+      ("attribute" (("name" "toolBarBreak")) ("bool" nil "false")))
+     ("widget" (("name" "statusBar") ("class" "QStatusBar"))))
+    ("layoutdefault" (("margin" "11") ("spacing" "6"))) ("resources" nil)
+    ("connections" nil))
+
+
 (defmacro e (&body body)
   `(statements (<< "std::cout" ,@(loop for e in body collect
 				      (cond ((stringp e) `(string ,e))
