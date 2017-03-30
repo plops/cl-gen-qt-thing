@@ -11,6 +11,13 @@ int main(int argc, char **argv) {
     scene->setBackgroundBrush(Qt::yellow);
     w.setScene(scene);
     {
+      auto tr = QTransform();
+
+      tr.rotate(45, Qt::ZAxis);
+      w.setTransform(tr);
+    }
+
+    {
       QGraphicsRectItem *rect = new QGraphicsRectItem(50, 50, 100, 100);
 
       rect->setFlag(QGraphicsItem::ItemIsSelectable);
