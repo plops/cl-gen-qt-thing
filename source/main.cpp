@@ -6,7 +6,7 @@ int main(int argc, char **argv) {
   {
     QApplication a(argc, argv);
     QGraphicsView w;
-    QGraphicsScene *scene = new QGraphicsScene(0, 0, 300, 300, &w);
+    auto scene = new QGraphicsScene(0, 0, 300, 300, &w);
 
     scene->setBackgroundBrush(Qt::yellow);
     w.setScene(scene);
@@ -18,10 +18,11 @@ int main(int argc, char **argv) {
     }
 
     {
-      QGraphicsRectItem *rect = new QGraphicsRectItem(50, 50, 100, 100);
-      QGraphicsRectItem *rect2 = new QGraphicsRectItem(48, 48, 104, 104);
+      auto rect = new QGraphicsRectItem(50, 50, 100, 100);
+      auto rect2 = new QGraphicsRectItem(48, 48, 104, 104);
 
       rect->setFlag(QGraphicsItem::ItemIsSelectable);
+      rect2->setFlag(QGraphicsItem::ItemIsSelectable);
       scene->addItem(rect);
       scene->addItem(rect2);
       {
