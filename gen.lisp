@@ -6,37 +6,18 @@
 
 #+nil
 (with-open-file (s "~/stage/cl-gen-qt-thing/source/main_win.ui")
- (xmls:parse s))
+  (xmls:parse s))
 #+nil
-("ui" (("version" "4.0")) ("class" nil "MainWindow")
-    ("widget" (("name" "MainWindow") ("class" "QMainWindow"))
-     ("property" (("name" "geometry"))
-      ("rect" nil ("x" nil "0") ("y" nil "0") ("width" nil "400")
-       ("height" nil "300")))
-     ("property" (("name" "windowTitle")) ("string" nil "MainWindow"))
-     ("widget" (("name" "centralWidget") ("class" "QWidget"))))
-    ("layoutdefault" (("margin" "11") ("spacing" "6"))) ("resources" nil)
-    ("connections" nil))
-
-#+nil
-("ui" (("version" "4.0")) ("class" nil "MainWindow")
-    ("widget" (("name" "MainWindow") ("class" "QMainWindow"))
-     ("property" (("name" "geometry"))
-      ("rect" nil ("x" nil "0") ("y" nil "0") ("width" nil "400")
-       ("height" nil "300")))
-     ("property" (("name" "windowTitle")) ("string" nil "MainWindow"))
-     ("widget" (("name" "centralWidget") ("class" "QWidget")))
-     ("widget" (("name" "menuBar") ("class" "QMenuBar"))
-      ("property" (("name" "geometry"))
-       ("rect" nil ("x" nil "0") ("y" nil "0") ("width" nil "400")
-        ("height" nil "29"))))
-     ("widget" (("name" "mainToolBar") ("class" "QToolBar"))
-      ("attribute" (("name" "toolBarArea")) ("enum" nil "TopToolBarArea"))
-      ("attribute" (("name" "toolBarBreak")) ("bool" nil "false")))
-     ("widget" (("name" "statusBar") ("class" "QStatusBar"))))
-    ("layoutdefault" (("margin" "11") ("spacing" "6"))) ("resources" nil)
-    ("connections" nil))
-
+(xmls:toxml 
+ '("ui" (("version" "4.0")) ("class" nil "MainWindow")
+   ("widget" (("name" "MainWindow") ("class" "QMainWindow"))
+    ("property" (("name" "geometry"))
+     ("rect" nil ("x" nil "0") ("y" nil "0") ("width" nil "400")
+	     ("height" nil "300")))
+    ("property" (("name" "windowTitle")) ("string" nil "MainWindow"))
+    ("widget" (("name" "centralWidget") ("class" "QWidget"))))
+   ("layoutdefault" (("margin" "11") ("spacing" "6"))) ("resources" nil)
+   ("connections" nil)))
 
 (defmacro e (&body body)
   `(statements (<< "std::cout" ,@(loop for e in body collect
@@ -71,6 +52,10 @@
        
 	 (include <QMainWindow>)
 	 (include <QWidget>)
+	 (include <QGraphicsScene>)
+	 (include <QGraphicsView>)
+
+	 
 	 (with-namespace Ui
 		    (raw "class MainWindow;"))
        (class MainWindow ("public QMainWindow")
@@ -79,7 +64,15 @@
 	      (function (MainWindow ((parent :type QWidget* :default nullptr)) explicit))
 	      (function (~MainWindow ()))
 	      (access-specifier private)
-	      (decl ((ui :type "Ui::MainWindow*"))))
+	      ;(decl ((ui :type "Ui::MainWindow*")))
+	      )
+       (class graph_widget ("public QGraphicsView")
+	      (raw "Q_OBJECT")
+	      (access-specifier public)
+	      (function (graph_widget ((parent :type QWidget* :default nullptr)) explicit))
+	      (access-specifier private)
+	      ;(decl ((center_node :type node_t)))
+	      )
        (raw "#endif // MAIN_WIN_H"))))
   (with-open-file (s *main-win-cpp-filename*
 		    :direction :output
@@ -92,15 +85,28 @@
     :code 
     `(with-compilation-unit
 	 (include "main_win.h")
-       (include "ui_main_win.h")
-       
+					;(include "ui_main_win.h")
+
+       (function ("graph_widget::graph_widget" ((parent :type QWidget*)) nil :ctor ((QGraphicsView parent))
+					       )
+		 (let ((scene :type QGraphicsScene* :init (new (funcall QGraphicsScene this))))
+		   (funcall scene->setSceneRect -200 -200 400 400)
+		   (funcall scene->addText (string "Hello"))
+		   (funcall setScene scene)
+		   
+		   (funcall setWindowTitle (funcall tr (string "elastic nodes")))))
        (function ("MainWindow::MainWindow" ((parent :type QWidget*)) nil
 			 :ctor ((QMainWindow parent)
-				(ui "new Ui::MainWindow")))
-		 (funcall "ui->setupUi" this)
+				;(ui "new Ui::MainWindow")
+				)
+			 )
+		 (raw "//")
+		 ;(funcall "ui->setupUi" this)
 		 )
        (function ("MainWindow::~MainWindow" ())
-		 (delete ui)))))  
+		 (raw "// ")
+		 ;(delete ui)
+		 ))))  
   (with-open-file (s *main-cpp-filename*
 		    :direction :output
 		    :if-exists :supersede
@@ -112,11 +118,15 @@
     `(with-compilation-unit
 	 (include "main_win.h")
        (include <QApplication>)
+       (include <QtGui>)
        (function (main ((argc :type int)
 			(argv :type char**))
 		       int)
 		 (let ((a :type QApplication :ctor (comma-list argc argv))
-		       (w :type MainWindow))
+		       (w :type QGraphicsView)
+		       (scene :type QGraphicsScene* :init (new (funcall QGraphicsScene 0 0 300 300 &w))))
+		   (funcall scene->setBackgroundBrush "Qt::yellow")
+		   (funcall w.setScene scene)
 		   (funcall w.show)
 		   
 		   (return (funcall a.exec)))))))

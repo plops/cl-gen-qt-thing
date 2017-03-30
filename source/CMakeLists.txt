@@ -8,7 +8,7 @@ find_package(Qt5Widgets)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
+#set(CMAKE_AUTOUIC ON)
 
 
 add_library(main_win main_win.cpp)

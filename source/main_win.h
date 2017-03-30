@@ -1,5 +1,7 @@
 #ifndef MAIN_WIN_H
 #define MAIN_WIN_H
+#include <QGraphicsScene>
+#include <QGraphicsView>
 #include <QMainWindow>
 #include <QWidget>
 namespace Ui {
@@ -13,7 +15,14 @@ public:
   ~MainWindow();
 
 private:
-  Ui::MainWindow *ui;
+};
+
+class graph_widget : public QGraphicsView {
+  Q_OBJECT
+public:
+  explicit graph_widget(QWidget *parent = nullptr);
+
+private:
 };
 
 #endif // MAIN_WIN_H
