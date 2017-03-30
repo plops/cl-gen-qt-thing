@@ -1,6 +1,7 @@
-#include "main_win.h"
 #include <QApplication>
-#include <QtGui>
+#include <QGraphicsRectItem>
+#include <QGraphicsScene>
+#include <QGraphicsView>
 int main(int argc, char **argv) {
   {
     QApplication a(argc, argv);
@@ -9,6 +10,12 @@ int main(int argc, char **argv) {
 
     scene->setBackgroundBrush(Qt::yellow);
     w.setScene(scene);
+    {
+      QGraphicsRectItem *rect = new QGraphicsRectItem(50, 50, 100, 100);
+
+      scene->addItem(rect);
+    }
+
     w.show();
     return a.exec();
   }

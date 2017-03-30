@@ -52,8 +52,6 @@
        
 	 (include <QMainWindow>)
 	 (include <QWidget>)
-	 (include <QGraphicsScene>)
-	 (include <QGraphicsView>)
 
 	 
 	 (with-namespace Ui
@@ -116,9 +114,13 @@
     :clear-env t
     :code 
     `(with-compilation-unit
-	 (include "main_win.h")
+	 ;;(include "main_win.h")
        (include <QApplication>)
-       (include <QtGui>)
+       ;(include <QtGui>)
+       	 (include <QGraphicsScene>)
+	 (include <QGraphicsView>)
+	 (include <QGraphicsRectItem>)
+
        (function (main ((argc :type int)
 			(argv :type char**))
 		       int)
@@ -127,6 +129,8 @@
 		       (scene :type QGraphicsScene* :init (new (funcall QGraphicsScene 0 0 300 300 &w))))
 		   (funcall scene->setBackgroundBrush "Qt::yellow")
 		   (funcall w.setScene scene)
+		   (let ((rect :type QGraphicsRectItem* :init (new (funcall QGraphicsRectItem 50 50 100 100))))
+		     (funcall scene->addItem rect))
 		   (funcall w.show)
 		   
 		   (return (funcall a.exec)))))))

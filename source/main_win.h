@@ -1,7 +1,5 @@
 #ifndef MAIN_WIN_H
 #define MAIN_WIN_H
-#include <QGraphicsScene>
-#include <QGraphicsView>
 #include <QMainWindow>
 #include <QWidget>
 namespace Ui {
