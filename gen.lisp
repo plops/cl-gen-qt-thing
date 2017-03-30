@@ -130,7 +130,9 @@
 		   (funcall scene->setBackgroundBrush "Qt::yellow")
 		   (funcall w.setScene scene)
 		   (let ((rect :type QGraphicsRectItem* :init (new (funcall QGraphicsRectItem 50 50 100 100))))
-		     (funcall scene->addItem rect))
+		     (funcall rect->setFlag "QGraphicsItem::ItemIsSelectable")
+		     (funcall scene->addItem rect)
+		     (funcall scene->addText (string "hello")))
 		   (funcall w.show)
 		   
 		   (return (funcall a.exec)))))))

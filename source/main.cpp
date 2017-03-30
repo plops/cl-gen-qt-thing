@@ -13,7 +13,9 @@ int main(int argc, char **argv) {
     {
       QGraphicsRectItem *rect = new QGraphicsRectItem(50, 50, 100, 100);
 
+      rect->setFlag(QGraphicsItem::ItemIsSelectable);
       scene->addItem(rect);
+      scene->addText("hello");
     }
 
     w.show();
