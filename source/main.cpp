@@ -9,6 +9,7 @@ int main(int argc, char **argv) {
     QGraphicsView w;
     auto scene = new QGraphicsScene(0, 0, 300, 300, &w);
 
+    w.setAttribute(Qt::WA_TranslucentBackground, false);
     scene->setBackgroundBrush(Qt::yellow);
     w.setScene(scene);
     {

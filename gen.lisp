@@ -3,7 +3,7 @@
   (ql:quickload :xmls))
 
 (in-package :cl-cpp-generator)
-
+;; -graphicssystem raster
 #+nil
 (with-open-file (s "~/stage/cl-gen-qt-thing/source/main_win.ui")
   (xmls:parse s))
@@ -125,9 +125,12 @@
        (function (main ((argc :type int)
 			(argv :type char**))
 		       int)
+		 
 		 (let ((a :type QApplication :ctor (comma-list argc argv))
 		       (w :type QGraphicsView)
 		       (scene :init (new (funcall QGraphicsScene 0 0 300 300 &w))))
+		   (funcall w.setAttribute "Qt::WA_TranslucentBackground" false)
+		   ;; BoundingRectViewportUpdate
 		   (funcall scene->setBackgroundBrush "Qt::yellow")
 		   (funcall w.setScene scene)
 		   (let ((tr :init (funcall QTransform))
