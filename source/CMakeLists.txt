@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 
 project(qt_thing)
 SET (CMAKE_CXX_COMPILER             "/usr/bin/clang++")
-set(CMAKE_CXX_FLAGS "-O3 -std=c++1z -fstack-protector-strong -fident -fasynchronous-unwind-tables -Wall -Wextra -pedantic-errors -Wsign-promo -Wnon-virtual-dtor -Winit-self -Wno-deprecated-declarations -pipe -D_FILE_OFFSET_BITS=64 -march=native   -ffast-math -Wno-nested-anon-types -ggdb") # -flto
+set(CMAKE_CXX_FLAGS "-ggdb -O2 -std=c++1z -fstack-protector-strong -fident -fasynchronous-unwind-tables -Wall -Wextra -pedantic-errors -Wsign-promo -Wnon-virtual-dtor -Winit-self -Wno-deprecated-declarations -pipe -D_FILE_OFFSET_BITS=64 -march=native   -ffast-math -Wno-nested-anon-types") # -flto
 
 find_package(Qt5Widgets)
 

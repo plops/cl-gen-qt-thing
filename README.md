@@ -5,4 +5,4 @@
 - mkdir ~/stage; cd ~/stage
 - git clone https://github.com/plops/cl-gen-qt-thing
 - cd cl-gen-qt-thing/; mkdir build
-- cd build; cmake ../source; make
+- cd build; cmake ../source -DCMAKE_BUILD_TYPE=RELEASE; make
