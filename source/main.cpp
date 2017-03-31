@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QGraphicsItemGroup>
 #include <QGraphicsRectItem>
 #include <QGraphicsScene>
 #include <QGraphicsView>
@@ -18,13 +19,16 @@ int main(int argc, char **argv) {
     }
 
     {
-      auto rect = new QGraphicsRectItem(50, 50, 100, 100);
-      auto rect2 = new QGraphicsRectItem(48, 48, 104, 104);
+      auto rect = new QGraphicsRectItem(50, 50, 59, 59);
+      auto rect2 = new QGraphicsRectItem(0, 0, 9, 9);
 
       rect->setFlag(QGraphicsItem::ItemIsSelectable);
-      rect2->setFlag(QGraphicsItem::ItemIsSelectable);
-      scene->addItem(rect);
-      scene->addItem(rect2);
+      rect2->setFlag(QGraphicsItem::ItemIsMovable);
+      {
+        QList<QGraphicsItem *> ql({rect, rect2});
+        auto grp = scene->createItemGroup(ql);
+      }
+
       {
         auto tr = QTransform();
 
