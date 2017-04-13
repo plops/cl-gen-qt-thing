@@ -141,10 +141,26 @@
 					  explicit
 					  :parent-ctor
 					  ((QGraphicsRectItem x y w h parent)))
-			  (raw "//"))
+			  (funcall this->setFlag
+			       "QGraphicsItem::ItemSendsGeometryChanges" 
+			       )
+			  (funcall this->setFlag
+				   "QGraphicsItem::ItemIsMovable")
+			  )
+		(access-specifier protected)
 		(function (mouseReleaseEvent ((event :type QGraphicsSceneMouseEvent*)) void)
 			  (<< (funcall qDebug) (string "mouse released in ") (funcall this->pos))
-			  (funcall "QGraphicsRectItem::mouseReleaseEvent" event)))
+			  (funcall "QGraphicsRectItem::mouseReleaseEvent" event))
+		(function (itemChange ((change :type GraphicsItemChange)
+				       (value :type "const QVariant")) QVariant)
+
+			  
+			  (<< (funcall qDebug) (string "item change"))
+			  (if (== "QGraphicsItem::ItemPositionHasChanged" change)
+			      (statements
+			       (raw "// value is the same as pos()")
+			       (<< (funcall qDebug) (string "item changed to ") value)))
+			  (return (funcall "QGraphicsItem::itemChange" change value))))
 	 
        (function (main ((argc :type int)
 			(argv :type char**))
@@ -170,8 +186,9 @@
 		      (funcall rect->setFlag "QGraphicsItem::ItemIsSelectable")
 		      (funcall rect->setPos 50 50)
 
-		      (funcall rect2->setFlag 
-			       "QGraphicsItem::ItemIsMovable")
+		      
+		      
+		     
 		      (funcall scene->addItem rect)
 		      (funcall scene->addItem rect2)
 		      #+nil (let ((grp :init (new (funcall QGraphicsItemGroup rect))))

@@ -17,12 +17,24 @@ public:
   explicit CustomRectItem(qreal x, qreal y, qreal w, qreal h,
                           QGraphicsItem *parent = nullptr)
       : QGraphicsRectItem(x, y, w, h, parent) {
-    //;
+    this->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
+    this->setFlag(QGraphicsItem::ItemIsMovable);
   }
 
+protected:
   void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     (qDebug() << "mouse released in " << this->pos());
     QGraphicsRectItem::mouseReleaseEvent(event);
+  }
+
+  QVariant itemChange(GraphicsItemChange change, const QVariant value) {
+    (qDebug() << "item change");
+    if ((QGraphicsItem::ItemPositionHasChanged == change)) {
+      // value is the same as pos();
+      (qDebug() << "item changed to " << value);
+    }
+
+    return QGraphicsItem::itemChange(change, value);
   }
 };
 
@@ -58,7 +70,6 @@ int main(int argc, char **argv) {
 
         rect->setFlag(QGraphicsItem::ItemIsSelectable);
         rect->setPos(50, 50);
-        rect2->setFlag(QGraphicsItem::ItemIsMovable);
         scene->addItem(rect);
         scene->addItem(rect2);
         {
