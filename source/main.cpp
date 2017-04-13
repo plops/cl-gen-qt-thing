@@ -1,8 +1,17 @@
 #include <QApplication>
+#include <QDebug>
 #include <QGraphicsItemGroup>
 #include <QGraphicsRectItem>
 #include <QGraphicsScene>
 #include <QGraphicsView>
+class CustomView : public QGraphicsView {
+protected:
+  void mouseReleaseEvent(QMouseEvent *event) {
+    (qDebug() << "Custom view mouse released.");
+    QGraphicsView::mouseReleaseEvent(event);
+  }
+};
+
 int main(int argc, char **argv) {
   if ((0 == argc)) {
     return 0;
@@ -14,8 +23,7 @@ int main(int argc, char **argv) {
 
   {
     QApplication a(argc, argv);
-    QGraphicsView w;
-    auto rect2 = new QGraphicsRectItem(0, 0, 9, 9);
+    CustomView w;
 
     w.setAttribute(Qt::WA_TranslucentBackground, false);
     {
@@ -31,9 +39,11 @@ int main(int argc, char **argv) {
       scene->setBackgroundBrush(Qt::yellow);
       w.setScene(scene);
       {
-        auto rect = new QGraphicsRectItem(50, 50, 59, 59);
+        auto rect = new QGraphicsRectItem(0, 0, 9, 9);
+        auto rect2 = new QGraphicsRectItem(0, 0, 9, 9);
 
         rect->setFlag(QGraphicsItem::ItemIsSelectable);
+        rect->setPos(50, 50);
         rect2->setFlag(QGraphicsItem::ItemIsMovable);
         scene->addItem(rect);
         scene->addItem(rect2);

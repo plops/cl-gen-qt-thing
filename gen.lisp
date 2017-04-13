@@ -3,6 +3,7 @@
   (ql:quickload :xmls))
 
 ;; qtcreator can open the cmake file
+;; https://stackoverflow.com/questions/10591635/can-i-get-mouse-events-in-a-qgraphicsitem
 
 (in-package :cl-cpp-generator)
 ;; -graphicssystem raster
@@ -123,7 +124,14 @@
 	 (include <QGraphicsView>)
 	 (include <QGraphicsRectItem>)
 	 (include <QGraphicsItemGroup>)
+	 (include <QDebug>)
 
+	 (class CustomView ("public QGraphicsView")
+		(access-specifier protected)
+		(function (mouseReleaseEvent ((event :type QMouseEvent*)) void)
+			  (<< (funcall qDebug) (string "Custom view mouse released."))
+			  (funcall "QGraphicsView::mouseReleaseEvent" event)))
+	 
        (function (main ((argc :type int)
 			(argv :type char**))
 		       int)
@@ -132,8 +140,8 @@
 		 (if (== nullptr argv)
 		     (return 0))
 		 (let ((a :type QApplication :ctor (comma-list argc argv))
-		       (w :type QGraphicsView)
-		       (rect2 :init (new (funcall QGraphicsRectItem 0 0 9 9))))
+		       (w :type CustomView)
+		       )
 		  (funcall w.setAttribute "Qt::WA_TranslucentBackground" false)
 		  (let ((tr :init (funcall QTransform)))
 		    (funcall tr.rotate 45 "Qt::ZAxis")
@@ -143,9 +151,10 @@
 		    (funcall scene->setBackgroundBrush "Qt::yellow")
 		    (funcall w.setScene scene)
 		    
-		    (let ((rect  :init (new (funcall QGraphicsRectItem 50 50 59 59)))
-			  )
+		    (let ((rect  :init (new (funcall QGraphicsRectItem 0 0 9 9)))
+			  (rect2 :init (new (funcall QGraphicsRectItem 0 0 9 9))))
 		      (funcall rect->setFlag "QGraphicsItem::ItemIsSelectable")
+		      (funcall rect->setPos 50 50)
 
 		      (funcall rect2->setFlag 
 			       "QGraphicsItem::ItemIsMovable")
