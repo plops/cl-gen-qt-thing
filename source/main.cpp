@@ -4,14 +4,20 @@
 #include <QGraphicsScene>
 #include <QGraphicsView>
 int main(int argc, char **argv) {
+  if ((0 == argc)) {
+    return 0;
+  }
+
+  if ((nullptr == argv)) {
+    return 0;
+  }
+
   {
     QApplication a(argc, argv);
     QGraphicsView w;
-    auto scene = new QGraphicsScene(0, 0, 300, 300, &w);
+    auto rect2 = new QGraphicsRectItem(0, 0, 9, 9);
 
     w.setAttribute(Qt::WA_TranslucentBackground, false);
-    scene->setBackgroundBrush(Qt::yellow);
-    w.setScene(scene);
     {
       auto tr = QTransform();
 
@@ -20,24 +26,26 @@ int main(int argc, char **argv) {
     }
 
     {
-      auto rect = new QGraphicsRectItem(50, 50, 59, 59);
-      auto rect2 = new QGraphicsRectItem(0, 0, 9, 9);
+      auto scene = new QGraphicsScene(0, 0, 300, 300, &w);
 
-      rect->setFlag(QGraphicsItem::ItemIsSelectable);
-      rect2->setFlag(QGraphicsItem::ItemIsMovable);
+      scene->setBackgroundBrush(Qt::yellow);
+      w.setScene(scene);
       {
-        QList<QGraphicsItem *> ql({rect, rect2});
-        auto grp = scene->createItemGroup(ql);
+        auto rect = new QGraphicsRectItem(50, 50, 59, 59);
+
+        rect->setFlag(QGraphicsItem::ItemIsSelectable);
+        rect2->setFlag(QGraphicsItem::ItemIsMovable);
+        scene->addItem(rect);
+        scene->addItem(rect2);
+        {
+          auto tr = QTransform();
+
+          tr.rotate(45, Qt::ZAxis);
+          rect2->setTransform(tr);
+        }
+
+        scene->addText("hello");
       }
-
-      {
-        auto tr = QTransform();
-
-        tr.rotate(45, Qt::ZAxis);
-        rect2->setTransform(tr);
-      }
-
-      scene->addText("hello");
     }
 
     w.show();
