@@ -2,6 +2,8 @@
   (ql:quickload :cl-cpp-generator)
   (ql:quickload :xmls))
 
+;; qtcreator can open the cmake file
+
 (in-package :cl-cpp-generator)
 ;; -graphicssystem raster
 #+nil
