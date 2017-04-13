@@ -131,6 +131,19 @@
 		(function (mouseReleaseEvent ((event :type QMouseEvent*)) void)
 			  (<< (funcall qDebug) (string "Custom view mouse released."))
 			  (funcall "QGraphicsView::mouseReleaseEvent" event)))
+	 (class CustomRectItem ("public QGraphicsRectItem")
+		(access-specifier public)
+		(function (CustomRectItem ((x :type qreal)
+					   (y :type qreal)
+					   (w :type qreal)
+					   (h :type qreal)
+					   (parent :type QGraphicsItem* :default nullptr))
+					  explicit)
+			  (funcall "QGraphicsRectItem::QGraphicsRectItem" x y w h parent))
+		(access-specifier protected)
+		(function (mouseReleaseEvent ((event :type QGraphicsSceneMouseEvent*)) void)
+			  (<< (funcall qDebug) (string "mouse released in ") (funcall this->pos))
+			  (funcall "QGraphicsRectItem::mouseReleaseEvent" event)))
 	 
        (function (main ((argc :type int)
 			(argv :type char**))
@@ -152,7 +165,7 @@
 		    (funcall w.setScene scene)
 		    
 		    (let ((rect  :init (new (funcall QGraphicsRectItem 0 0 9 9)))
-			  (rect2 :init (new (funcall QGraphicsRectItem 0 0 9 9))))
+			  (rect2 :init (new (funcall CustomRectItem 0 0 9 9))))
 		      (funcall rect->setFlag "QGraphicsItem::ItemIsSelectable")
 		      (funcall rect->setPos 50 50)
 

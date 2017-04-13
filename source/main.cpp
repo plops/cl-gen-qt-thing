@@ -12,6 +12,21 @@ protected:
   }
 };
 
+class CustomRectItem : public QGraphicsRectItem {
+public:
+  explicit CustomRectItem(qreal x, qreal y, qreal w, qreal h,
+                          QGraphicsItem *parent = nullptr):
+   QGraphicsRectItem(x, y, w, h, parent)
+  {
+  }
+
+protected:
+  void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+    (qDebug() << "mouse released in " << this->pos());
+    QGraphicsRectItem::mouseReleaseEvent(event);
+  }
+};
+
 int main(int argc, char **argv) {
   if ((0 == argc)) {
     return 0;
@@ -40,7 +55,7 @@ int main(int argc, char **argv) {
       w.setScene(scene);
       {
         auto rect = new QGraphicsRectItem(0, 0, 9, 9);
-        auto rect2 = new QGraphicsRectItem(0, 0, 9, 9);
+        auto rect2 = new CustomRectItem(0, 0, 9, 9);
 
         rect->setFlag(QGraphicsItem::ItemIsSelectable);
         rect->setPos(50, 50);
