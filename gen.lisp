@@ -138,9 +138,10 @@
 					   (w :type qreal)
 					   (h :type qreal)
 					   (parent :type QGraphicsItem* :default nullptr))
-					  explicit)
-			  (funcall "QGraphicsRectItem::QGraphicsRectItem" x y w h parent))
-		(access-specifier protected)
+					  explicit
+					  :parent-ctor
+					  ((QGraphicsRectItem x y w h parent)))
+			  (raw "//"))
 		(function (mouseReleaseEvent ((event :type QGraphicsSceneMouseEvent*)) void)
 			  (<< (funcall qDebug) (string "mouse released in ") (funcall this->pos))
 			  (funcall "QGraphicsRectItem::mouseReleaseEvent" event)))

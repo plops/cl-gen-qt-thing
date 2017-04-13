@@ -15,12 +15,11 @@ protected:
 class CustomRectItem : public QGraphicsRectItem {
 public:
   explicit CustomRectItem(qreal x, qreal y, qreal w, qreal h,
-                          QGraphicsItem *parent = nullptr):
-   QGraphicsRectItem(x, y, w, h, parent)
-  {
+                          QGraphicsItem *parent = nullptr)
+      : QGraphicsRectItem(x, y, w, h, parent) {
+    //;
   }
 
-protected:
   void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     (qDebug() << "mouse released in " << this->pos());
     QGraphicsRectItem::mouseReleaseEvent(event);
