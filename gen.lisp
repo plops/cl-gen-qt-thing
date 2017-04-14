@@ -175,7 +175,18 @@
 			      (statements
 			       (raw "// value is the same as pos()") 
 			       (funcall moveLineToCenter (funcall value.toPointF))
-			       (funcall moveTextToCenter (funcall value.toPointF))
+			       (if text
+				(let ((s :type QString)
+				      (st :type QTextStream :ctor &s))
+				  (funcall st.setFieldWidth 10)
+				  (funcall st.setFieldAlignment "QTextStream::AlignCenter")
+				  (funcall st.setPadChar (char #\_))
+				  (<< st (funcall "value.toPointF().x")
+				      (funcall "value.toPointF().y"))
+				
+				  (funcall text->setPlainText s)
+				  (funcall moveTextToCenter (funcall value.toPointF))))
+			       
 			       ))
 			  (return (funcall "QGraphicsItem::itemChange" change value)))
 		
@@ -212,7 +223,7 @@
 		       (w :type QGraphicsView #+nil CustomView)
 		       )
 		  (funcall w.setAttribute "Qt::WA_TranslucentBackground" false)
-		  (let ((tr :init (funcall QTransform)))
+		  #+nil (let ((tr :init (funcall QTransform)))
 		    (funcall tr.rotate 45 "Qt::ZAxis")
 		    (funcall w.setTransform tr))
 		  ;; BoundingRectViewportUpdate
@@ -241,6 +252,7 @@
 		      (funcall handle_center->setPos 150 150)
 		      (funcall handle_periph->setPos 130 280)
 		      (funcall handle_center->addLabel)
+		      (funcall handle_periph->addLabel)
 		      
 		      
 		      

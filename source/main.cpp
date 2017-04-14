@@ -30,7 +30,19 @@ protected:
     if (((ItemPositionChange == change) && scene())) {
       // value is the same as pos();
       moveLineToCenter(value.toPointF());
-      moveTextToCenter(value.toPointF());
+      if (text) {
+        {
+          QString s;
+          QTextStream st(&s);
+
+          st.setFieldWidth(10);
+          st.setFieldAlignment(QTextStream::AlignCenter);
+          st.setPadChar('_');
+          (st << value.toPointF().x() << value.toPointF().y());
+          text->setPlainText(s);
+          moveTextToCenter(value.toPointF());
+        }
+      }
     }
 
     return QGraphicsItem::itemChange(change, value);
@@ -72,13 +84,6 @@ int main(int argc, char **argv) {
 
     w.setAttribute(Qt::WA_TranslucentBackground, false);
     {
-      auto tr = QTransform();
-
-      tr.rotate(45, Qt::ZAxis);
-      w.setTransform(tr);
-    }
-
-    {
       auto scene = new QGraphicsScene(0, 0, 300, 300, &w);
 
       scene->setBackgroundBrush(Qt::lightGray);
@@ -104,6 +109,7 @@ int main(int argc, char **argv) {
         handle_center->setPos(150, 150);
         handle_periph->setPos(130, 280);
         handle_center->addLabel();
+        handle_periph->addLabel();
         {
           auto tr = QTransform();
 
