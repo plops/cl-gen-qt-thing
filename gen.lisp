@@ -178,7 +178,7 @@
 			       (if text
 				(let ((s :type QString)
 				      (st :type QTextStream :ctor &s))
-				  (funcall st.setFieldWidth 10)
+				  (funcall st.setFieldWidth 4)
 				  (funcall st.setFieldAlignment "QTextStream::AlignCenter")
 				  (funcall st.setPadChar (char #\_))
 				  (<< st (funcall "value.toPointF().x")

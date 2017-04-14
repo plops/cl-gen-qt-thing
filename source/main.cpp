@@ -35,7 +35,7 @@ protected:
           QString s;
           QTextStream st(&s);
 
-          st.setFieldWidth(10);
+          st.setFieldWidth(4);
           st.setFieldAlignment(QTextStream::AlignCenter);
           st.setPadChar('_');
           (st << value.toPointF().x() << value.toPointF().y());
