@@ -147,12 +147,23 @@
 					  :parent-ctor
 					  ((QGraphicsRectItem rect)))
 			  (funcall this->setFlag "QGraphicsItem::ItemIsMovable")
-			  (funcall this->setFlag "QGraphicsItem::ItemSendsGeometryChanges")
+			  ;(funcall this->setFlag "QGraphicsItem::ItemSendsGeometryChanges")
 			  (funcall this->setFlag "QGraphicsItem::ItemSendsScenePositionChanges"))
 		(function (addLine ((line :type QGraphicsLineItem*)
 				    (is_first_point_p :type bool)) void)
 			  (setf this->line line
 				first_point_p is_first_point_p))
+		(function (itemChange ((change :type GraphicsItemChange)
+				       (value :type "const QVariant&")) QVariant)
+			  ;; http://stackoverflow.com/questions/32192607/how-to-use-itemchange-from-qgraphicsitem-in-qt
+			  
+			  (if (&& (== ItemPositionChange change)
+				  (funcall scene))
+			      (statements
+			       (raw "// value is the same as pos()")
+			       (funcall moveLineToCenter (funcall value.toPointF))
+			       ))
+			  (return (funcall "QGraphicsItem::itemChange" change value)))
 		(access-specifier protected)
 		(function (mouseReleaseEvent ((event :type QGraphicsSceneMouseEvent*)) void)
 			  (<< (funcall qDebug) (string "mouse released in ") (funcall this->pos))
@@ -160,18 +171,7 @@
 			  (funcall "QGraphicsRectItem::mouseReleaseEvent" event))
 		
 		
-		(function (itemChange ((change :type GraphicsItemChange)
-				       (value :type "const QVariant")) QVariant)
-			  ;; http://stackoverflow.com/questions/32192607/how-to-use-itemchange-from-qgraphicsitem-in-qt
-			  
-			  (<< (funcall qDebug) (string "item change"))
-			  (if (&& (== "QGraphicsItem::ItemPositionHasChanged" change)
-				  (funcall scene))
-			      (statements
-			       (raw "// value is the same as pos()")
-			       (funcall moveLineToCenter (funcall value.toPointF))
-			       (<< (funcall qDebug) (string "item changed to ") value)))
-			  (return (funcall "QGraphicsItem::itemChange" change value)))
+		
 		(access-specifier private)
 		(function (moveLineToCenter ((newPos :type QPointF)) void)
 			  (let ((p1 :init (? first_point_p newPos "line->line().p1()"))
@@ -201,8 +201,8 @@
 		    (funcall scene->setBackgroundBrush "Qt::yellow")
 		    (funcall w.setScene scene)
 		    
-		    (let ((rect  :init (new (funcall CustomRectItem (funcall QRectF 0 0 9 9))))
-			  (rect2 :init (new (funcall CustomRectItem (funcall QRectF 0 0 9 9)))))
+		    (let ((rect  :init (new (funcall CustomRectItem (funcall QRectF -7 -7 7 7))))
+			  (rect2 :init (new (funcall CustomRectItem (funcall QRectF -7 -7 7 7)))))
 		      (funcall rect->setPos 50 50)
 		      (funcall rect2->setPos 10 20)
 		      

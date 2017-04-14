@@ -17,7 +17,6 @@ class CustomRectItem : public QGraphicsRectItem {
 public:
   explicit CustomRectItem(const QRectF &rect) : QGraphicsRectItem(rect) {
     this->setFlag(QGraphicsItem::ItemIsMovable);
-    this->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
     this->setFlag(QGraphicsItem::ItemSendsScenePositionChanges);
   }
 
@@ -26,22 +25,20 @@ public:
     first_point_p = is_first_point_p;
   }
 
+  QVariant itemChange(GraphicsItemChange change, const QVariant &value) {
+    if (((ItemPositionChange == change) && scene())) {
+      // value is the same as pos();
+      moveLineToCenter(value.toPointF());
+    }
+
+    return QGraphicsItem::itemChange(change, value);
+  }
+
 protected:
   void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     (qDebug() << "mouse released in " << this->pos());
     moveLineToCenter(this->pos());
     QGraphicsRectItem::mouseReleaseEvent(event);
-  }
-
-  QVariant itemChange(GraphicsItemChange change, const QVariant value) {
-    (qDebug() << "item change");
-    if (((QGraphicsItem::ItemPositionHasChanged == change) && scene())) {
-      // value is the same as pos();
-      moveLineToCenter(value.toPointF());
-      (qDebug() << "item changed to " << value);
-    }
-
-    return QGraphicsItem::itemChange(change, value);
   }
 
 private:
@@ -86,8 +83,8 @@ int main(int argc, char **argv) {
       scene->setBackgroundBrush(Qt::yellow);
       w.setScene(scene);
       {
-        auto rect = new CustomRectItem(QRectF(0, 0, 9, 9));
-        auto rect2 = new CustomRectItem(QRectF(0, 0, 9, 9));
+        auto rect = new CustomRectItem(QRectF(-7, -7, 7, 7));
+        auto rect2 = new CustomRectItem(QRectF(-7, -7, 7, 7));
 
         rect->setPos(50, 50);
         rect2->setPos(10, 20);
