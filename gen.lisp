@@ -163,7 +163,7 @@
 			  (if (&& (== ItemPositionChange change)
 				  (funcall scene))
 			      (statements
-			       (raw "// value is the same as pos()")
+			       (raw "// value is the same as pos()") 
 			       (funcall moveLineToCenter (funcall value.toPointF))
 			       ))
 			  (return (funcall "QGraphicsItem::itemChange" change value)))
