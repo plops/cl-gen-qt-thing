@@ -149,23 +149,34 @@
 			  (funcall this->setFlag "QGraphicsItem::ItemIsMovable")
 			  (funcall this->setFlag "QGraphicsItem::ItemSendsGeometryChanges")
 			  (funcall this->setFlag "QGraphicsItem::ItemSendsScenePositionChanges"))
+		(function (addLine ((line :type QGraphicsLineItem*)
+				    (is_first_point_p :type bool)) void)
+			  (setf this->line line
+				first_point_p is_first_point_p))
 		(access-specifier protected)
 		(function (mouseReleaseEvent ((event :type QGraphicsSceneMouseEvent*)) void)
 			  (<< (funcall qDebug) (string "mouse released in ") (funcall this->pos))
+			  (funcall moveLineToCenter (funcall this->pos))
 			  (funcall "QGraphicsRectItem::mouseReleaseEvent" event))
-		;; http://stackoverflow.com/questions/32192607/how-to-use-itemchange-from-qgraphicsitem-in-qt
+		
+		
 		(function (itemChange ((change :type GraphicsItemChange)
 				       (value :type "const QVariant")) QVariant)
-
+			  ;; http://stackoverflow.com/questions/32192607/how-to-use-itemchange-from-qgraphicsitem-in-qt
 			  
 			  (<< (funcall qDebug) (string "item change"))
 			  (if (&& (== "QGraphicsItem::ItemPositionHasChanged" change)
 				  (funcall scene))
 			      (statements
 			       (raw "// value is the same as pos()")
+			       (funcall moveLineToCenter (funcall value.toPointF))
 			       (<< (funcall qDebug) (string "item changed to ") value)))
 			  (return (funcall "QGraphicsItem::itemChange" change value)))
 		(access-specifier private)
+		(function (moveLineToCenter ((newPos :type QPointF)) void)
+			  (let ((p1 :init (? first_point_p newPos "line->line().p1()"))
+				(p2 :init (? first_point_p "line->line().p2()" newPos)))
+			    (funcall line->setLine (funcall QLineF p1 p2))))
 		(decl ((line :type "QGraphicsLineItem*")
 		       (first_point_p :type bool))))
 
@@ -195,7 +206,10 @@
 		      (funcall rect->setPos 50 50)
 		      (funcall rect2->setPos 10 20)
 		      
-		      (let ((line :init (funcall scene->addLine (funcall QLineF 40 40 80 80)))))
+		      (let ((line :init (funcall scene->addLine (funcall QLineF 40 40 80 80)))
+			    )
+			(funcall rect->addLine line true)
+			(funcall rect2->addLine line false))
 		      
 		     
 		      (funcall scene->addItem rect)

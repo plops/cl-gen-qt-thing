@@ -21,9 +21,15 @@ public:
     this->setFlag(QGraphicsItem::ItemSendsScenePositionChanges);
   }
 
+  void addLine(QGraphicsLineItem *line, bool is_first_point_p) {
+    this->line = line;
+    first_point_p = is_first_point_p;
+  }
+
 protected:
   void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     (qDebug() << "mouse released in " << this->pos());
+    moveLineToCenter(this->pos());
     QGraphicsRectItem::mouseReleaseEvent(event);
   }
 
@@ -31,6 +37,7 @@ protected:
     (qDebug() << "item change");
     if (((QGraphicsItem::ItemPositionHasChanged == change) && scene())) {
       // value is the same as pos();
+      moveLineToCenter(value.toPointF());
       (qDebug() << "item changed to " << value);
     }
 
@@ -38,6 +45,15 @@ protected:
   }
 
 private:
+  void moveLineToCenter(QPointF newPos) {
+    {
+      auto p1 = (first_point_p) ? (newPos) : (line->line().p1());
+      auto p2 = (first_point_p) ? (line->line().p2()) : (newPos);
+
+      line->setLine(QLineF(p1, p2));
+    }
+  }
+
   QGraphicsLineItem *line;
   bool first_point_p;
 };
@@ -75,7 +91,12 @@ int main(int argc, char **argv) {
 
         rect->setPos(50, 50);
         rect2->setPos(10, 20);
-        { auto line = scene->addLine(QLineF(40, 40, 80, 80)); }
+        {
+          auto line = scene->addLine(QLineF(40, 40, 80, 80));
+
+          rect->addLine(line, true);
+          rect2->addLine(line, false);
+        }
 
         scene->addItem(rect);
         scene->addItem(rect2);
