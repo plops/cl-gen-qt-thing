@@ -154,6 +154,7 @@
 				    (is_first_point_p :type bool)) void)
 			  (setf this->line line
 				first_point_p is_first_point_p))
+		(function (addLabel (())))
 		(access-specifier protected)
 		(function (itemChange ((change :type GraphicsItemChange)
 				       (value :type "const QVariant&")) QVariant)
