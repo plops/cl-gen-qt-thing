@@ -123,7 +123,7 @@
     :clear-env t
     :code 
     `(with-compilation-unit
-	 (include "main_win.h")
+	; (include "main_win.h")
        (include <QApplication>)
        ;(include <QtGui>)
        (include <QGraphicsScene>)

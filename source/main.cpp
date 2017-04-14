@@ -1,4 +1,3 @@
-#include "main_win.h"
 #include <QApplication>
 #include <QDebug>
 #include <QGraphicsItemGroup>
