@@ -133,7 +133,7 @@
        (include <QGraphicsItemGroup>)
        (include <QDebug>)
 
-	 (class CustomView ("public QGraphicsView")
+	 #+nil (class CustomView ("public QGraphicsView")
 		(access-specifier protected)
 		(function (mouseReleaseEvent ((event :type QMouseEvent*)) void)
 			  (<< (funcall qDebug) (string "Custom view mouse released."))
@@ -153,6 +153,7 @@
 				    (is_first_point_p :type bool)) void)
 			  (setf this->line line
 				first_point_p is_first_point_p))
+		(access-specifier protected)
 		(function (itemChange ((change :type GraphicsItemChange)
 				       (value :type "const QVariant&")) QVariant)
 			  ;; http://stackoverflow.com/questions/32192607/how-to-use-itemchange-from-qgraphicsitem-in-qt
@@ -164,8 +165,8 @@
 			       (funcall moveLineToCenter (funcall value.toPointF))
 			       ))
 			  (return (funcall "QGraphicsItem::itemChange" change value)))
-		(access-specifier protected)
-		(function (mouseReleaseEvent ((event :type QGraphicsSceneMouseEvent*)) void)
+		
+		#+nil (function (mouseReleaseEvent ((event :type QGraphicsSceneMouseEvent*)) void)
 			  (<< (funcall qDebug) (string "mouse released in ") (funcall this->pos))
 			  (funcall moveLineToCenter (funcall this->pos))
 			  (funcall "QGraphicsRectItem::mouseReleaseEvent" event))
@@ -190,7 +191,7 @@
 		 (if (== nullptr argv)
 		     (return 0))
 		 (let ((a :type QApplication :ctor (comma-list argc argv))
-		       (w :type CustomView)
+		       (w :type QGraphicsView #+nil CustomView)
 		       )
 		  (funcall w.setAttribute "Qt::WA_TranslucentBackground" false)
 		  (let ((tr :init (funcall QTransform)))

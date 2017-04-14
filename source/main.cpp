@@ -5,14 +5,6 @@
 #include <QGraphicsRectItem>
 #include <QGraphicsScene>
 #include <QGraphicsView>
-class CustomView : public QGraphicsView {
-protected:
-  void mouseReleaseEvent(QMouseEvent *event) {
-    (qDebug() << "Custom view mouse released.");
-    QGraphicsView::mouseReleaseEvent(event);
-  }
-};
-
 class CustomRectItem : public QGraphicsRectItem {
 public:
   explicit CustomRectItem(const QRectF &rect) : QGraphicsRectItem(rect) {
@@ -25,6 +17,7 @@ public:
     first_point_p = is_first_point_p;
   }
 
+protected:
   QVariant itemChange(GraphicsItemChange change, const QVariant &value) {
     if (((ItemPositionChange == change) && scene())) {
       // value is the same as pos();
@@ -32,13 +25,6 @@ public:
     }
 
     return QGraphicsItem::itemChange(change, value);
-  }
-
-protected:
-  void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
-    (qDebug() << "mouse released in " << this->pos());
-    moveLineToCenter(this->pos());
-    QGraphicsRectItem::mouseReleaseEvent(event);
   }
 
 private:
@@ -67,7 +53,7 @@ int main(int argc, char **argv) {
 
   {
     QApplication a(argc, argv);
-    CustomView w;
+    QGraphicsView w;
 
     w.setAttribute(Qt::WA_TranslucentBackground, false);
     {
