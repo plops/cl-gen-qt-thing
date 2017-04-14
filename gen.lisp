@@ -129,6 +129,7 @@
        (include <QGraphicsScene>)
        (include <QGraphicsView>)
        (include <QGraphicsRectItem>)
+       (include <QGraphicsLineItem>)
        (include <QGraphicsItemGroup>)
        (include <QDebug>)
 
@@ -137,34 +138,29 @@
 		(function (mouseReleaseEvent ((event :type QMouseEvent*)) void)
 			  (<< (funcall qDebug) (string "Custom view mouse released."))
 			  (funcall "QGraphicsView::mouseReleaseEvent" event)))
-	 (class CustomRectItem ("public QObject" ;; inherit from QObject first
+	 (class CustomRectItem (;"public QObject" ;; inherit from QObject first
 				"public QGraphicsRectItem")
-		(raw "Q_OBJECT")
+		#+nil (raw "Q_OBJECT")
 		(access-specifier public)
-		(function (CustomRectItem ((x :type qreal)
-					   (y :type qreal)
-					   (w :type qreal)
-					   (h :type qreal)
-					   (parent :type QGraphicsItem* :default nullptr))
+		(function (CustomRectItem ((rect :type "const QRectF&"))
 					  explicit
 					  :parent-ctor
-					  ((QGraphicsRectItem x y w h parent)))
-			  (funcall this->setFlag
-			       "QGraphicsItem::ItemSendsGeometryChanges" 
-			       )
-			  (funcall this->setFlag
-				   "QGraphicsItem::ItemIsMovable")
-			  )
+					  ((QGraphicsRectItem rect)))
+			  (funcall this->setFlag "QGraphicsItem::ItemIsMovable")
+			  (funcall this->setFlag "QGraphicsItem::ItemSendsGeometryChanges")
+			  (funcall this->setFlag "QGraphicsItem::ItemSendsScenePositionChanges"))
 		(access-specifier protected)
 		(function (mouseReleaseEvent ((event :type QGraphicsSceneMouseEvent*)) void)
 			  (<< (funcall qDebug) (string "mouse released in ") (funcall this->pos))
 			  (funcall "QGraphicsRectItem::mouseReleaseEvent" event))
+		;; http://stackoverflow.com/questions/32192607/how-to-use-itemchange-from-qgraphicsitem-in-qt
 		(function (itemChange ((change :type GraphicsItemChange)
 				       (value :type "const QVariant")) QVariant)
 
 			  
 			  (<< (funcall qDebug) (string "item change"))
-			  (if (== "QGraphicsItem::ItemPositionHasChanged" change)
+			  (if (&& (== "QGraphicsItem::ItemPositionHasChanged" change)
+				  (funcall scene))
 			      (statements
 			       (raw "// value is the same as pos()")
 			       (<< (funcall qDebug) (string "item changed to ") value)))
@@ -191,8 +187,8 @@
 		    (funcall scene->setBackgroundBrush "Qt::yellow")
 		    (funcall w.setScene scene)
 		    
-		    (let ((rect  :init (new (funcall QGraphicsRectItem 0 0 9 9)))
-			  (rect2 :init (new (funcall CustomRectItem 0 0 9 9))))
+		    (let ((rect  :init (new (funcall QGraphicsRectItem (funcall QRectF 0 0 9 9))))
+			  (rect2 :init (new (funcall CustomRectItem (funcall QRectF 0 0 9 9)))))
 		      (funcall rect->setFlag "QGraphicsItem::ItemIsSelectable")
 		      (funcall rect->setPos 50 50)
 		      (funcall rect2->setPos 10 20)

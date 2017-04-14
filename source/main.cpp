@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QDebug>
 #include <QGraphicsItemGroup>
+#include <QGraphicsLineItem>
 #include <QGraphicsRectItem>
 #include <QGraphicsScene>
 #include <QGraphicsView>
@@ -12,14 +13,12 @@ protected:
   }
 };
 
-class CustomRectItem : public QObject, public QGraphicsRectItem {
-  Q_OBJECT
+class CustomRectItem : public QGraphicsRectItem {
 public:
-  explicit CustomRectItem(qreal x, qreal y, qreal w, qreal h,
-                          QGraphicsItem *parent = nullptr)
-      : QGraphicsRectItem(x, y, w, h, parent) {
-    this->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
+  explicit CustomRectItem(const QRectF &rect) : QGraphicsRectItem(rect) {
     this->setFlag(QGraphicsItem::ItemIsMovable);
+    this->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
+    this->setFlag(QGraphicsItem::ItemSendsScenePositionChanges);
   }
 
 protected:
@@ -30,7 +29,7 @@ protected:
 
   QVariant itemChange(GraphicsItemChange change, const QVariant value) {
     (qDebug() << "item change");
-    if ((QGraphicsItem::ItemPositionHasChanged == change)) {
+    if (((QGraphicsItem::ItemPositionHasChanged == change) && scene())) {
       // value is the same as pos();
       (qDebug() << "item changed to " << value);
     }
@@ -67,8 +66,8 @@ int main(int argc, char **argv) {
       scene->setBackgroundBrush(Qt::yellow);
       w.setScene(scene);
       {
-        auto rect = new QGraphicsRectItem(0, 0, 9, 9);
-        auto rect2 = new CustomRectItem(0, 0, 9, 9);
+        auto rect = new QGraphicsRectItem(QRectF(0, 0, 9, 9));
+        auto rect2 = new CustomRectItem(QRectF(0, 0, 9, 9));
 
         rect->setFlag(QGraphicsItem::ItemIsSelectable);
         rect->setPos(50, 50);
