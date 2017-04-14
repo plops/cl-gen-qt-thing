@@ -4,7 +4,10 @@ project(qt_thing)
 #SET (CMAKE_CXX_COMPILER             "/usr/bin/clang++")
 set(CMAKE_CXX_FLAGS "-ggdb -O2 -std=c++1z -fstack-protector-strong -fident -fasynchronous-unwind-tables -Wall -Wextra -pedantic-errors -Wsign-promo -Wnon-virtual-dtor -Winit-self -Wno-deprecated-declarations -pipe -D_FILE_OFFSET_BITS=64 -march=native   -ffast-math -Wno-nested-anon-types") # -flto
 
+# note that you have to delete the cmake cache in build/ when you want to switch to a different qt installation 
+set(CMAKE_PREFIX_PATH "/home/martin/big/Qt/5.8/gcc_64/")
 find_package(Qt5Widgets)
+
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)

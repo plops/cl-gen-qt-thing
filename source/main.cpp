@@ -70,6 +70,7 @@ int main(int argc, char **argv) {
 
         rect->setFlag(QGraphicsItem::ItemIsSelectable);
         rect->setPos(50, 50);
+        rect2->setPos(10, 20);
         scene->addItem(rect);
         scene->addItem(rect2);
         {

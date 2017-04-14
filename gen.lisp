@@ -185,6 +185,7 @@
 			  (rect2 :init (new (funcall CustomRectItem 0 0 9 9))))
 		      (funcall rect->setFlag "QGraphicsItem::ItemIsSelectable")
 		      (funcall rect->setPos 50 50)
+		      (funcall rect2->setPos 10 20)
 
 		      
 		      
