@@ -4,6 +4,7 @@
 #include <QGraphicsLineItem>
 #include <QGraphicsRectItem>
 #include <QGraphicsScene>
+#include <QGraphicsTextItem>
 #include <QGraphicsView>
 class CustomRectItem : public QGraphicsRectItem {
 public:
@@ -17,11 +18,19 @@ public:
     first_point_p = is_first_point_p;
   }
 
+  void addLabel() {
+    text = new QGraphicsTextItem();
+    text->setPos(this->pos());
+    text->setPlainText("Barev");
+    this->scene()->addItem(text);
+  }
+
 protected:
   QVariant itemChange(GraphicsItemChange change, const QVariant &value) {
     if (((ItemPositionChange == change) && scene())) {
       // value is the same as pos();
       moveLineToCenter(value.toPointF());
+      moveTextToCenter(value.toPointF());
     }
 
     return QGraphicsItem::itemChange(change, value);
@@ -37,8 +46,15 @@ private:
     }
   }
 
-  QGraphicsLineItem *line;
-  bool first_point_p;
+  void moveTextToCenter(QPointF newPos) {
+    if (text) {
+      text->setPos(newPos);
+    }
+  }
+
+  QGraphicsLineItem *line = nullptr;
+  QGraphicsTextItem *text = nullptr;
+  bool first_point_p = false;
 };
 
 int main(int argc, char **argv) {
@@ -87,6 +103,7 @@ int main(int argc, char **argv) {
         // CustomRect::itemChange;
         handle_center->setPos(150, 150);
         handle_periph->setPos(130, 280);
+        handle_center->addLabel();
         {
           auto tr = QTransform();
 
