@@ -9,6 +9,7 @@ class CustomRectItem : public QGraphicsRectItem {
 public:
   explicit CustomRectItem(const QRectF &rect) : QGraphicsRectItem(rect) {
     this->setFlag(QGraphicsItem::ItemIsMovable);
+    this->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
     this->setFlag(QGraphicsItem::ItemSendsScenePositionChanges);
   }
 
@@ -19,6 +20,7 @@ public:
 
 protected:
   QVariant itemChange(GraphicsItemChange change, const QVariant &value) {
+    (qDebug() << "change " << this->pos() << " " << value);
     if (((ItemPositionChange == change) && scene())) {
       // value is the same as pos();
       moveLineToCenter(value.toPointF());
@@ -69,8 +71,10 @@ int main(int argc, char **argv) {
       scene->setBackgroundBrush(Qt::yellow);
       w.setScene(scene);
       {
-        auto rect = new CustomRectItem(QRectF(-7, -7, 7, 7));
-        auto rect2 = new CustomRectItem(QRectF(-7, -7, 7, 7));
+        auto w = (1.7e+1f);
+        auto c = (w / (-2.e+0f));
+        auto rect = new CustomRectItem(QRectF(c, c, w, w));
+        auto rect2 = new CustomRectItem(QRectF(c, c, w, w));
 
         rect->setPos(50, 50);
         rect2->setPos(10, 20);

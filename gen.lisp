@@ -147,8 +147,9 @@
 					  :parent-ctor
 					  ((QGraphicsRectItem rect)))
 			  (funcall this->setFlag "QGraphicsItem::ItemIsMovable")
-			  ;(funcall this->setFlag "QGraphicsItem::ItemSendsGeometryChanges")
-			  (funcall this->setFlag "QGraphicsItem::ItemSendsScenePositionChanges"))
+			  (funcall this->setFlag "QGraphicsItem::ItemSendsGeometryChanges")
+			  (funcall this->setFlag "QGraphicsItem::ItemSendsScenePositionChanges")
+			  )
 		(function (addLine ((line :type QGraphicsLineItem*)
 				    (is_first_point_p :type bool)) void)
 			  (setf this->line line
@@ -157,7 +158,7 @@
 		(function (itemChange ((change :type GraphicsItemChange)
 				       (value :type "const QVariant&")) QVariant)
 			  ;; http://stackoverflow.com/questions/32192607/how-to-use-itemchange-from-qgraphicsitem-in-qt
-			  
+			  (<< (funcall qDebug) (string "change ") (funcall this->pos) (string " ") value)
 			  (if (&& (== ItemPositionChange change)
 				  (funcall scene))
 			      (statements
@@ -202,8 +203,10 @@
 		    (funcall scene->setBackgroundBrush "Qt::yellow")
 		    (funcall w.setScene scene)
 		    
-		    (let ((rect  :init (new (funcall CustomRectItem (funcall QRectF -7 -7 7 7))))
-			  (rect2 :init (new (funcall CustomRectItem (funcall QRectF -7 -7 7 7)))))
+		    (let ((w :init 17.0)
+			  (c :init (/ w -2.0))
+			  (rect  :init (new (funcall CustomRectItem (funcall QRectF c c w w))))
+			  (rect2 :init (new (funcall CustomRectItem (funcall QRectF c c w w)))))
 		      (funcall rect->setPos 50 50)
 		      (funcall rect2->setPos 10 20)
 		      
