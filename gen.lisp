@@ -164,7 +164,10 @@
 			      (statements
 			       (raw "// value is the same as pos()")
 			       (<< (funcall qDebug) (string "item changed to ") value)))
-			  (return (funcall "QGraphicsItem::itemChange" change value))))
+			  (return (funcall "QGraphicsItem::itemChange" change value)))
+		(access-specifier private)
+		(decl ((line :type "QGraphicsLineItem*")
+		       (first_point_p :type bool))))
 
 	 (include "main.moc")
 	 
@@ -187,13 +190,12 @@
 		    (funcall scene->setBackgroundBrush "Qt::yellow")
 		    (funcall w.setScene scene)
 		    
-		    (let ((rect  :init (new (funcall QGraphicsRectItem (funcall QRectF 0 0 9 9))))
+		    (let ((rect  :init (new (funcall CustomRectItem (funcall QRectF 0 0 9 9))))
 			  (rect2 :init (new (funcall CustomRectItem (funcall QRectF 0 0 9 9)))))
-		      (funcall rect->setFlag "QGraphicsItem::ItemIsSelectable")
 		      (funcall rect->setPos 50 50)
 		      (funcall rect2->setPos 10 20)
-
 		      
+		      (let ((line :init (funcall scene->addLine (funcall QLineF 40 40 80 80)))))
 		      
 		     
 		      (funcall scene->addItem rect)

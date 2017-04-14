@@ -36,6 +36,10 @@ protected:
 
     return QGraphicsItem::itemChange(change, value);
   }
+
+private:
+  QGraphicsLineItem *line;
+  bool first_point_p;
 };
 
 #include "main.moc"
@@ -66,12 +70,13 @@ int main(int argc, char **argv) {
       scene->setBackgroundBrush(Qt::yellow);
       w.setScene(scene);
       {
-        auto rect = new QGraphicsRectItem(QRectF(0, 0, 9, 9));
+        auto rect = new CustomRectItem(QRectF(0, 0, 9, 9));
         auto rect2 = new CustomRectItem(QRectF(0, 0, 9, 9));
 
-        rect->setFlag(QGraphicsItem::ItemIsSelectable);
         rect->setPos(50, 50);
         rect2->setPos(10, 20);
+        { auto line = scene->addLine(QLineF(40, 40, 80, 80)); }
+
         scene->addItem(rect);
         scene->addItem(rect2);
         {
