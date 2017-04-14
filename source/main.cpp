@@ -9,7 +9,6 @@ class CustomRectItem : public QGraphicsRectItem {
 public:
   explicit CustomRectItem(const QRectF &rect) : QGraphicsRectItem(rect) {
     this->setFlag(QGraphicsItem::ItemIsMovable);
-    this->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
     this->setFlag(QGraphicsItem::ItemSendsScenePositionChanges);
   }
 
@@ -20,7 +19,6 @@ public:
 
 protected:
   QVariant itemChange(GraphicsItemChange change, const QVariant &value) {
-    (qDebug() << "change " << this->pos() << " " << value);
     if (((ItemPositionChange == change) && scene())) {
       // value is the same as pos();
       moveLineToCenter(value.toPointF());
@@ -43,7 +41,6 @@ private:
   bool first_point_p;
 };
 
-#include "main.moc"
 int main(int argc, char **argv) {
   if ((0 == argc)) {
     return 0;
@@ -68,30 +65,33 @@ int main(int argc, char **argv) {
     {
       auto scene = new QGraphicsScene(0, 0, 300, 300, &w);
 
-      scene->setBackgroundBrush(Qt::yellow);
+      scene->setBackgroundBrush(Qt::lightGray);
       w.setScene(scene);
       {
         auto w = (1.7e+1f);
         auto c = (w / (-2.e+0f));
-        auto rect = new CustomRectItem(QRectF(c, c, w, w));
-        auto rect2 = new CustomRectItem(QRectF(c, c, w, w));
+        auto handle_center = new CustomRectItem(QRectF(c, c, w, w));
+        auto handle_periph = new CustomRectItem(QRectF(c, c, w, w));
 
-        rect->setPos(50, 50);
-        rect2->setPos(10, 20);
         {
           auto line = scene->addLine(QLineF(40, 40, 80, 80));
 
-          rect->addLine(line, true);
-          rect2->addLine(line, false);
+          // initiate the line to some random ;
+          handle_center->addLine(line, true);
+          handle_periph->addLine(line, false);
         }
 
-        scene->addItem(rect);
-        scene->addItem(rect2);
+        scene->addItem(handle_center);
+        scene->addItem(handle_periph);
+        // change position of handles now, so that the line is redrawn by
+        // CustomRect::itemChange;
+        handle_center->setPos(150, 150);
+        handle_periph->setPos(130, 280);
         {
           auto tr = QTransform();
 
           tr.rotate(45, Qt::ZAxis);
-          rect2->setTransform(tr);
+          handle_center->setTransform(tr);
         }
 
         scene->addText("hello");

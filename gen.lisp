@@ -147,7 +147,7 @@
 					  :parent-ctor
 					  ((QGraphicsRectItem rect)))
 			  (funcall this->setFlag "QGraphicsItem::ItemIsMovable")
-			  (funcall this->setFlag "QGraphicsItem::ItemSendsGeometryChanges")
+			  ;(funcall this->setFlag "QGraphicsItem::ItemSendsGeometryChanges")
 			  (funcall this->setFlag "QGraphicsItem::ItemSendsScenePositionChanges")
 			  )
 		(function (addLine ((line :type QGraphicsLineItem*)
@@ -158,7 +158,7 @@
 		(function (itemChange ((change :type GraphicsItemChange)
 				       (value :type "const QVariant&")) QVariant)
 			  ;; http://stackoverflow.com/questions/32192607/how-to-use-itemchange-from-qgraphicsitem-in-qt
-			  (<< (funcall qDebug) (string "change ") (funcall this->pos) (string " ") value)
+			  ;(<< (funcall qDebug) (string "change ") (funcall this->pos) (string " ") value)
 			  (if (&& (== ItemPositionChange change)
 				  (funcall scene))
 			      (statements
@@ -182,7 +182,7 @@
 		(decl ((line :type "QGraphicsLineItem*")
 		       (first_point_p :type bool))))
 
-	 (include "main.moc")
+	 ;(include "main.moc")
 	 
        (function (main ((argc :type int)
 			(argv :type char**))
@@ -200,24 +200,31 @@
 		    (funcall w.setTransform tr))
 		  ;; BoundingRectViewportUpdate
 		  (let ((scene :init (new (funcall QGraphicsScene 0 0 300 300 &w))))
-		    (funcall scene->setBackgroundBrush "Qt::yellow")
+		    (funcall scene->setBackgroundBrush "Qt::lightGray")
 		    (funcall w.setScene scene)
 		    
 		    (let ((w :init 17.0)
 			  (c :init (/ w -2.0))
-			  (rect  :init (new (funcall CustomRectItem (funcall QRectF c c w w))))
-			  (rect2 :init (new (funcall CustomRectItem (funcall QRectF c c w w)))))
-		      (funcall rect->setPos 50 50)
-		      (funcall rect2->setPos 10 20)
+			  (handle_center  :init (new (funcall CustomRectItem (funcall QRectF c c w w))))
+			  (handle_periph :init (new (funcall CustomRectItem (funcall QRectF c c w w)))))
 		      
-		      (let ((line :init (funcall scene->addLine (funcall QLineF 40 40 80 80)))
-			    )
-			(funcall rect->addLine line true)
-			(funcall rect2->addLine line false))
 		      
-		     
-		      (funcall scene->addItem rect)
-		      (funcall scene->addItem rect2)
+		      
+		      (let ((line :init (funcall scene->addLine (funcall QLineF 40 40 80 80))))
+			(raw "// initiate the line to some random ")
+			(funcall handle_center->addLine line true)
+			(funcall handle_periph->addLine line false))
+
+		      (funcall scene->addItem handle_center)
+		      (funcall scene->addItem handle_periph)
+
+		      (raw "// change position of handles now, so that the line is redrawn by CustomRect::itemChange")
+		      
+		      (funcall handle_center->setPos 150 150)
+		      (funcall handle_periph->setPos 130 280)
+
+		      
+		      
 		      #+nil (let ((grp :init (new (funcall QGraphicsItemGroup rect))))
 			      (funcall grp->addToGroup rect)
 			      (funcall grp->addToGroup rect2)
@@ -227,7 +234,7 @@
 			      )
 		      (let ((tr :init (funcall QTransform)))
 			(funcall tr.rotate 45 "Qt::ZAxis")
-			(funcall rect2->setTransform tr))
+			(funcall handle_center->setTransform tr))
 		      (funcall scene->addText (string "hello"))))
 		  (funcall w.show)
 		  
