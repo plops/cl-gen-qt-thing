@@ -55,11 +55,16 @@
        
 	 (include <QMainWindow>)
 	 (include <QWidget>)
+	 (include <QGraphicsScene>)
+       (include <QGraphicsView>)
+       (include <QGraphicsRectItem>)
+       (include <QGraphicsItemGroup>)
+       (include <QDebug>)
 
 	 
 	 (with-namespace Ui
 		    (raw "class MainWindow;"))
-       (class MainWindow ("public QMainWindow")
+       #+nil (class MainWindow ("public QMainWindow")
 	      (raw "Q_OBJECT")
 	      (access-specifier public)
 	      (function (MainWindow ((parent :type QWidget* :default nullptr)) explicit))
@@ -67,13 +72,14 @@
 	      (access-specifier private)
 	      ;(decl ((ui :type "Ui::MainWindow*")))
 	      )
-       (class graph_widget ("public QGraphicsView")
+       #+nil (class graph_widget ("public QGraphicsView")
 	      (raw "Q_OBJECT")
 	      (access-specifier public)
 	      (function (graph_widget ((parent :type QWidget* :default nullptr)) explicit))
 	      (access-specifier private)
 	      ;(decl ((center_node :type node_t)))
 	      )
+       
        (raw "#endif // MAIN_WIN_H"))))
   (with-open-file (s *main-win-cpp-filename*
 		    :direction :output
@@ -87,8 +93,8 @@
     `(with-compilation-unit
 	 (include "main_win.h")
 					;(include "ui_main_win.h")
-
-       (function ("graph_widget::graph_widget" ((parent :type QWidget*)) nil :ctor ((QGraphicsView parent))
+       
+       #+nil (function ("graph_widget::graph_widget" ((parent :type QWidget*)) nil :ctor ((QGraphicsView parent))
 					       )
 		 (let ((scene :type QGraphicsScene* :init (new (funcall QGraphicsScene this))))
 		   (funcall scene->setSceneRect -200 -200 400 400)
@@ -96,7 +102,7 @@
 		   (funcall setScene scene)
 		   
 		   (funcall setWindowTitle (funcall tr (string "elastic nodes")))))
-       (function ("MainWindow::MainWindow" ((parent :type QWidget*)) nil
+       #+nil (function ("MainWindow::MainWindow" ((parent :type QWidget*)) nil
 			 :ctor ((QMainWindow parent)
 				;(ui "new Ui::MainWindow")
 				)
@@ -104,7 +110,7 @@
 		 (raw "//")
 		 ;(funcall "ui->setupUi" this)
 		 )
-       (function ("MainWindow::~MainWindow" ())
+       #+nil (function ("MainWindow::~MainWindow" ())
 		 (raw "// ")
 		 ;(delete ui)
 		 ))))  
@@ -117,21 +123,23 @@
     :clear-env t
     :code 
     `(with-compilation-unit
-	 ;;(include "main_win.h")
+	 (include "main_win.h")
        (include <QApplication>)
        ;(include <QtGui>)
-       	 (include <QGraphicsScene>)
-	 (include <QGraphicsView>)
-	 (include <QGraphicsRectItem>)
-	 (include <QGraphicsItemGroup>)
-	 (include <QDebug>)
+       (include <QGraphicsScene>)
+       (include <QGraphicsView>)
+       (include <QGraphicsRectItem>)
+       (include <QGraphicsItemGroup>)
+       (include <QDebug>)
 
 	 (class CustomView ("public QGraphicsView")
 		(access-specifier protected)
 		(function (mouseReleaseEvent ((event :type QMouseEvent*)) void)
 			  (<< (funcall qDebug) (string "Custom view mouse released."))
 			  (funcall "QGraphicsView::mouseReleaseEvent" event)))
-	 (class CustomRectItem ("public QGraphicsRectItem")
+	 (class CustomRectItem ("public QObject" ;; inherit from QObject first
+				"public QGraphicsRectItem")
+		(raw "Q_OBJECT")
 		(access-specifier public)
 		(function (CustomRectItem ((x :type qreal)
 					   (y :type qreal)
@@ -161,6 +169,8 @@
 			       (raw "// value is the same as pos()")
 			       (<< (funcall qDebug) (string "item changed to ") value)))
 			  (return (funcall "QGraphicsItem::itemChange" change value))))
+
+	 (include "main.moc")
 	 
        (function (main ((argc :type int)
 			(argv :type char**))

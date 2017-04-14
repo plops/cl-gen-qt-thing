@@ -1,3 +1,4 @@
+#include "main_win.h"
 #include <QApplication>
 #include <QDebug>
 #include <QGraphicsItemGroup>
@@ -12,7 +13,8 @@ protected:
   }
 };
 
-class CustomRectItem : public QGraphicsRectItem {
+class CustomRectItem : public QObject, public QGraphicsRectItem {
+  Q_OBJECT
 public:
   explicit CustomRectItem(qreal x, qreal y, qreal w, qreal h,
                           QGraphicsItem *parent = nullptr)
@@ -38,6 +40,7 @@ protected:
   }
 };
 
+#include "main.moc"
 int main(int argc, char **argv) {
   if ((0 == argc)) {
     return 0;
