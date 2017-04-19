@@ -173,7 +173,32 @@
 			  (if (&& (== ItemPositionChange change)
 				  (funcall scene))
 			      (statements
-			       (raw "// value is the same as pos()") 
+			       (raw "// value is the same as pos()")
+			       (let ((dx :init 20)
+				     (dy :init dx)
+				     (nx :init 10)
+				     (ny :init nx))
+				 (let ((p0 :init "line->line().p1()")
+				       (p1 :init "line->line().p2()")
+				       (diff :init (- p1 p0))
+				       (horizontal_p :init (< (funcall diff.y)
+							      (funcall diff.x)))
+				       (nbig :init (? horizontal_p nx ny))
+				       )
+				   (dotimes (i nbig)
+				     (let ((j :init (+ (* dy i)))
+					  (eps :init -2))
+				      (let ((y1 :init (- j eps))
+					    (x1 :init (- i eps))
+					    (y2 :init (+ (+ 1 j) eps))
+					    (x2 :init (+ (+ 1 i) eps))
+					    (rect :init (? horizontal_p
+							   (funcall QRectF x1 y1 dx dy)
+							   (funcall QRectF y1 x1 dx dy))))
+					(funcall "this->scene()->addRect" rect
+						 (funcall QPen "Qt::green" 4 "Qt::SolidLine"
+							  "Qt::FlatCap"
+							  "Qt::MiterJoin")))))))
 			       (funcall moveLineToCenter (funcall value.toPointF))
 			       (if text
 				(let ((s :type QString)

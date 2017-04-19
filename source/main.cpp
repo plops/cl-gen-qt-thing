@@ -29,6 +29,40 @@ protected:
   QVariant itemChange(GraphicsItemChange change, const QVariant &value) {
     if (((ItemPositionChange == change) && scene())) {
       // value is the same as pos();
+      {
+        auto dx = 20;
+        auto dy = dx;
+        auto nx = 10;
+        auto ny = nx;
+
+        {
+          auto p0 = line->line().p1();
+          auto p1 = line->line().p2();
+          auto diff = (p1 - p0);
+          auto horizontal_p = (diff.y() < diff.x());
+          auto nbig = (horizontal_p) ? (nx) : (ny);
+
+          for (unsigned int i = 0; (i < nbig); i += 1) {
+            {
+              auto j = ((dy * i));
+              auto eps = -2;
+
+              {
+                auto y1 = (j - eps);
+                auto x1 = (i - eps);
+                auto y2 = ((1 + j) + eps);
+                auto x2 = ((1 + i) + eps);
+                auto rect = (horizontal_p) ? (QRectF(x1, y1, dx, dy))
+                                           : (QRectF(y1, x1, dx, dy));
+
+                this->scene()->addRect(rect, QPen(Qt::green, 4, Qt::SolidLine,
+                                                  Qt::FlatCap, Qt::MiterJoin));
+              }
+            }
+          }
+        }
+      }
+
       moveLineToCenter(value.toPointF());
       if (text) {
         {
