@@ -228,45 +228,64 @@
 		    (funcall w.setTransform tr))
 		  ;; BoundingRectViewportUpdate
 		  (let ((scene :init (new (funcall QGraphicsScene 0 0 300 300 &w))))
-		    (funcall scene->setBackgroundBrush "Qt::lightGray")
+		    (funcall scene->setBackgroundBrush "Qt::white" ; "Qt::lightGray"
+			     )
 		    (funcall w.setScene scene)
-		    
-		    (let ((w :init 17.0)
-			  (c :init (/ w -2.0))
-			  (handle_center  :init (new (funcall CustomRectItem (funcall QRectF c c w w))))
-			  (handle_periph :init (new (funcall CustomRectItem (funcall QRectF c c w w)))))
-		      
-		      
-		      
-		      (let ((line :init (funcall scene->addLine (funcall QLineF 40 40 80 80))))
-			(raw "// initiate the line to some random ")
-			(funcall handle_center->addLine line true)
-			(funcall handle_periph->addLine line false))
 
-		      (funcall scene->addItem handle_center)
-		      (funcall scene->addItem handle_periph)
+		    (with-compilation-unit
+			(raw "// draw grid")
+		      (dotimes (i 9)
+		       (let ((x1 :init (* 30 (+ 1 i)))
+			     (y1 :init 20)
+			     (x2 :init x1)
+			     (y2 :init 280))
+			 (funcall scene->addLine (funcall QLineF x1 y1 x2 y2))))
+		      (dotimes (i 9)
+		       (let ((y1 :init (* 30 (+ 1 i)))
+			     (x1 :init 20)
+			     (y2 :init y1)
+			     (x2 :init 280))
+			 (funcall scene->addLine (funcall QLineF x1 y1 x2 y2)))))
+
+		    (with-compilation-unit
+			(raw "// two handles to define the line")
+		     (let ((w :init 17.0)
+			   (c :init (/ w -2.0))
+			   (handle_center  :init (new (funcall CustomRectItem (funcall QRectF c c w w))))
+			   (handle_periph :init (new (funcall CustomRectItem (funcall QRectF c c w w)))))
+		       
 		      
 		      
-		      (raw "// change position of handles now, so that the line is redrawn by CustomRect::itemChange")
+		       (let ((line :init (funcall scene->addLine (funcall QLineF 40 40 80 80))))
+			 (raw "// initiate the line to some random ")
+			 (funcall handle_center->addLine line true)
+			 (funcall handle_periph->addLine line false))
+
+		       (funcall scene->addItem handle_center)
+		       (funcall scene->addItem handle_periph)
 		      
-		      (funcall handle_center->setPos 150 150)
-		      (funcall handle_periph->setPos 130 280)
-		      (funcall handle_center->addLabel)
-		      (funcall handle_periph->addLabel)
+		      
+		       (raw "// change position of handles now, so that the line is redrawn by CustomRect::itemChange")
+		      
+		       (funcall handle_center->setPos 150 150)
+		       (funcall handle_periph->setPos 130 280)
+		       (funcall handle_center->addLabel)
+		       (funcall handle_periph->addLabel)
 		      
 		      
 		      
-		      #+nil (let ((grp :init (new (funcall QGraphicsItemGroup rect))))
-			      (funcall grp->addToGroup rect)
-			      (funcall grp->addToGroup rect2)
-			      (funcall scene->addItem grp))
-		      #+nil (let ((ql :type QList<QGraphicsItem*> :ctor (list rect rect2))
-				  (grp :init (funcall scene->createItemGroup ql)))
-			      )
-		      (let ((tr :init (funcall QTransform)))
-			(funcall tr.rotate 45 "Qt::ZAxis")
-			(funcall handle_center->setTransform tr))
-		      (funcall scene->addText (string "hello"))))
+		       #+nil (let ((grp :init (new (funcall QGraphicsItemGroup rect))))
+			       (funcall grp->addToGroup rect)
+			       (funcall grp->addToGroup rect2)
+			       (funcall scene->addItem grp))
+		       #+nil (let ((ql :type QList<QGraphicsItem*> :ctor (list rect rect2))
+				   (grp :init (funcall scene->createItemGroup ql)))
+			       )
+		       (let ((tr :init (funcall QTransform)))
+			 (funcall tr.rotate 45 "Qt::ZAxis")
+			 (funcall handle_center->setTransform tr))
+		      
+		       (funcall scene->addText (string "hello")))))
 		  (funcall w.show)
 		  
 		  (return (funcall a.exec)))))))
@@ -309,4 +328,8 @@
 ;; Prior to reconfiguration, make sure you remove any leftovers from	     ;;
 ;; the previous build.							     ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; ./configure -opensource -release -static -prefix /opt/qt5 -psql_config /dev/null  -no-xcb -opengl -nomake tests -nomake examples -skip qtwebengine -qt-xcb
+
+;; ./configure -no-c++11 -optimized-qmake -no-kms -no-cups -no-nis -no-iconv -system-zlib -system-pcre -no-pch -release -shared -largefile -opensource -confirm-license -gui -widgets -no-linuxfb -no-directfb -no-xcb  -opengl -eglfs -openssl
 

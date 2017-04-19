@@ -86,8 +86,32 @@ int main(int argc, char **argv) {
     {
       auto scene = new QGraphicsScene(0, 0, 300, 300, &w);
 
-      scene->setBackgroundBrush(Qt::lightGray);
+      scene->setBackgroundBrush(Qt::white);
       w.setScene(scene);
+      // draw grid
+      for (unsigned int i = 0; (i < 9); i += 1) {
+        {
+          auto x1 = (30 * (1 + i));
+          auto y1 = 20;
+          auto x2 = x1;
+          auto y2 = 280;
+
+          scene->addLine(QLineF(x1, y1, x2, y2));
+        }
+      }
+
+      for (unsigned int i = 0; (i < 9); i += 1) {
+        {
+          auto y1 = (30 * (1 + i));
+          auto x1 = 20;
+          auto y2 = y1;
+          auto x2 = 280;
+
+          scene->addLine(QLineF(x1, y1, x2, y2));
+        }
+      }
+
+      // two handles to define the line
       {
         auto w = (1.7e+1f);
         auto c = (w / (-2.e+0f));
