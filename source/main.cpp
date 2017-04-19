@@ -117,18 +117,19 @@ int main(int argc, char **argv) {
           }
         }
 
+        // highlight one rectangle;
         {
           auto i = 4;
           auto j = 3;
-          auto eps = 5;
+          auto eps = 1;
 
           {
             auto y1 = ((dy * j) - eps);
             auto x1 = ((dx * i) - eps);
-            auto y2 = (eps + (dy * (1 + j)));
-            auto x2 = (eps + (dx * (1 + i)));
+            auto y2 = ((dy * (1 + j)) + eps);
+            auto x2 = ((dx * (1 + i)) + eps);
 
-            scene->addRect(QRectF(x1, y2, (x2 - x1), (y2 - y1)));
+            scene->addRect(QRectF(x1, y1, (x2 - x1), (y2 - y1)));
           }
         }
       }

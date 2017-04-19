@@ -253,12 +253,12 @@
 		       (raw "// highlight one rectangle")
 		       (let ((i :init 4)
 			     (j :init 3)
-			     (eps :init 5))
+			     (eps :init 1))
 			(let ((y1 :init (- (* dy j) eps))
 			      (x1 :init (- (* dx i) eps))
-			      (y2 :init (+ eps (* dy (+ 1 j))))
-			      (x2 :init (+ eps (* dx (+ 1 i)))))
-			  (funcall scene->addRect (funcall QRectF x1 y2 (- x2 x1) (- y2 y1)))))))
+			      (y2 :init (+ (* dy (+ 1 j)) eps))
+			      (x2 :init (+ (* dx (+ 1 i)) eps)))
+			  (funcall scene->addRect (funcall QRectF x1 y1 (- x2 x1) (- y2 y1)))))))
 
 		    (with-compilation-unit
 			(raw "// two handles to define the line")
