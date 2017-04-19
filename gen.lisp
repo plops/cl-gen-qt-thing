@@ -249,8 +249,16 @@
 			       (x1 :init (* dx 1))
 			       (y2 :init y1)
 			       (x2 :init (* dx nx)))
-			   (funcall scene->addLine (funcall QLineF x1 y1 x2 y2)))))
-		      #+nil (funcall scene->addRect (funcall QRectF c c w w)))
+			   (funcall scene->addLine (funcall QLineF x1 y1 x2 y2))))
+		       (raw "// highlight one rectangle")
+		       (let ((i :init 4)
+			     (j :init 3)
+			     (eps :init 5))
+			(let ((y1 :init (- (* dy j) eps))
+			      (x1 :init (- (* dx i) eps))
+			      (y2 :init (+ eps (* dy (+ 1 j))))
+			      (x2 :init (+ eps (* dx (+ 1 i)))))
+			  (funcall scene->addRect (funcall QRectF x1 y2 (- x2 x1) (- y2 y1)))))))
 
 		    (with-compilation-unit
 			(raw "// two handles to define the line")
