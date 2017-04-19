@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
         {
           auto i = 4;
           auto j = 3;
-          auto eps = 1;
+          auto eps = -2;
 
           {
             auto y1 = ((dy * j) - eps);
@@ -129,7 +129,9 @@ int main(int argc, char **argv) {
             auto y2 = ((dy * (1 + j)) + eps);
             auto x2 = ((dx * (1 + i)) + eps);
 
-            scene->addRect(QRectF(x1, y1, (x2 - x1), (y2 - y1)));
+            scene->addRect(
+                QRectF(x1, y1, (x2 - x1), (y2 - y1)),
+                QPen(Qt::red, 3, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin));
           }
         }
       }
