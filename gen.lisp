@@ -41,6 +41,8 @@
 	(include <QGraphicsTextItem>)
 	(include <QGraphicsItemGroup>)
 	(include <QDebug>)
+	(include <vector>)
+	(include <utility>)
 	
 	(raw "//! This program displays a line on a canvas. The parameters of the line can be adjusted with two control points. The canvas also displays a grid of square pixels and highlights the pixels that are intersected by the line.
 
@@ -168,24 +170,50 @@
 				  (x2 :init x1)
 				  (y2 :init (* dy ny)))
 			      (funcall this->addToGroup (new (funcall QGraphicsLineItem (funcall QLineF x1 y1 x2 y2))))))
-			  #+nil (dotimes (i nx)
+			  (dotimes (i nx)
 			    (let ((y1 :init (* dy (+ 1 i)))
 				  (x1 :init (* dx 1))
 				  (y2 :init y1)
 				  (x2 :init (* dx nx)))
-			      (funcall "scene()->addLine" (funcall QLineF x1 y1 x2 y2))))
-			  (raw "// highlight one rectangle")
-			  #+nil (let ((i :init 4)
-				(j :init 3)
-				(eps :init -2))
-			    (let ((y1 :init (- (* dy j) eps))
-				  (x1 :init (- (* dx i) eps))
-				  (y2 :init (+ (* dy (+ 1 j)) eps))
-				  (x2 :init (+ (* dx (+ 1 i)) eps)))
-			      (funcall "scene()->addRect" (funcall QRectF x1 y1 (- x2 x1) (- y2 y1))
-				       (funcall QPen "Qt::red" 3 "Qt::SolidLine"
-						"Qt::FlatCap"
-						"Qt::MiterJoin")))))))
+			      (funcall this->addToGroup (new (funcall QGraphicsLineItem (funcall QLineF x1 y1 x2 y2)))))))))
+	     
+	       (access-specifier private)
+	       (decl ((m_dx :type "unsigned int")
+		      (m_dy :type "unsigned int")
+		      (m_nx :type "unsigned int")
+		      (m_ny :type "unsigned int"))))
+	
+	(class CustomItemPixelsGroup ("public QGraphicsItemGroup")
+	       (access-specifier public)
+	       (function (CustomItemPixelsGroup ((dx :type int)
+						 (dy :type int)
+						 (nx :type int)
+						 (ny :type int)
+						 (vecs :type "std::vector<std::pair<int,int> >"))
+						explicit
+						:ctor
+						((m_dx dx)
+						 (m_dy dy)
+						 (m_nx nx)
+						 (m_ny ny)))
+			 (with-compilation-unit
+			     (let ((dx :init m_dx)
+				   (dy :init m_dy)
+				   (nx :init m_nx)
+				   (ny :init m_ny))
+			       (for-range (v vecs)
+				(let ((i :init "v.first")
+				      (j :init "v.second")
+				      (eps :init -2))
+				  (let ((y1 :init (- (* dy j) eps))
+					(x1 :init (- (* dx i) eps))
+					(y2 :init (+ (* dy (+ 1 j)) eps))
+					(x2 :init (+ (* dx (+ 1 i)) eps)))
+				    (funcall "this->addToGroup" (new (funcall QGraphicsRectItem
+									      (funcall QRectF x1 y1 (- x2 x1) (- y2 y1))
+									      #+nil  (funcall QPen "Qt::red" 3 "Qt::SolidLine"
+											      "Qt::FlatCap"
+											      "Qt::MiterJoin"))))))))))
 	     
 	       (access-specifier private)
 	       (decl ((m_dx :type "unsigned int")
@@ -247,6 +275,10 @@
 			(let ((w :init 17.0)
 			      (c :init (/ w -2.0))
 			      (grid :init (new (funcall CustomItemGridGroup 20 20 10 10)))
+			      (pos :type "std::vector<std::pair<int,int> >" :init (list (list 1 1)
+											(list 2 2)
+											(list 2 3)))
+			      (pixels :init (new (funcall CustomItemPixelsGroup 20 20 10 10 pos)))
 			      (handle_center  :init (new (funcall CustomRectItem (funcall QRectF c c w w))))
 			      (handle_periph :init (new (funcall CustomRectItem (funcall QRectF c c w w)))))
 			  
@@ -259,6 +291,7 @@
 
 			  
 			  (funcall scene->addItem grid)
+			  (funcall scene->addItem pixels)
 			  (funcall scene->addItem handle_center)
 			  (funcall scene->addItem handle_periph)
 			  

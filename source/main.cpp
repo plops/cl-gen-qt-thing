@@ -7,6 +7,8 @@
 #include <QGraphicsScene>
 #include <QGraphicsTextItem>
 #include <QGraphicsView>
+#include <utility>
+#include <vector>
 //! This program displays a line on a canvas. The parameters of the line can be
 //! adjusted with two control points. The canvas also displays a grid of square
 //! pixels and highlights the pixels that are intersected by the line.
@@ -114,7 +116,54 @@ public:
         }
       }
 
-      // highlight one rectangle;
+      for (unsigned int i = 0; (i < nx); i += 1) {
+        {
+          auto y1 = (dy * (1 + i));
+          auto x1 = (dx * 1);
+          auto y2 = y1;
+          auto x2 = (dx * nx);
+
+          this->addToGroup(new QGraphicsLineItem(QLineF(x1, y1, x2, y2)));
+        }
+      }
+    }
+  }
+
+private:
+  unsigned int m_dx;
+  unsigned int m_dy;
+  unsigned int m_nx;
+  unsigned int m_ny;
+};
+
+class CustomItemPixelsGroup : public QGraphicsItemGroup {
+public:
+  explicit CustomItemPixelsGroup(int dx, int dy, int nx, int ny,
+                                 std::vector<std::pair<int, int>> vecs)
+      : m_dx(dx), m_dy(dy), m_nx(nx), m_ny(ny) {
+    {
+      auto dx = m_dx;
+      auto dy = m_dy;
+      auto nx = m_nx;
+      auto ny = m_ny;
+
+      for (auto v : vecs) {
+        {
+          auto i = v.first;
+          auto j = v.second;
+          auto eps = -2;
+
+          {
+            auto y1 = ((dy * j) - eps);
+            auto x1 = ((dx * i) - eps);
+            auto y2 = ((dy * (1 + j)) + eps);
+            auto x2 = ((dx * (1 + i)) + eps);
+
+            this->addToGroup(
+                new QGraphicsRectItem(QRectF(x1, y1, (x2 - x1), (y2 - y1))));
+          }
+        }
+      }
     }
   }
 
@@ -149,6 +198,8 @@ int main(int argc, char **argv) {
         auto w = (1.7e+1f);
         auto c = (w / (-2.e+0f));
         auto grid = new CustomItemGridGroup(20, 20, 10, 10);
+        std::vector<std::pair<int, int>> pos = {{1, 1}, {2, 2}, {2, 3}};
+        auto pixels = new CustomItemPixelsGroup(20, 20, 10, 10, pos);
         auto handle_center = new CustomRectItem(QRectF(c, c, w, w));
         auto handle_periph = new CustomRectItem(QRectF(c, c, w, w));
 
@@ -161,6 +212,7 @@ int main(int argc, char **argv) {
         }
 
         scene->addItem(grid);
+        scene->addItem(pixels);
         scene->addItem(handle_center);
         scene->addItem(handle_periph);
         handle_center->addLabel();
