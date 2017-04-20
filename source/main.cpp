@@ -6,6 +6,14 @@
 #include <QGraphicsScene>
 #include <QGraphicsTextItem>
 #include <QGraphicsView>
+//! This program displays a line on a canvas. The parameters of the line can be
+//! adjusted with two control points. The canvas also displays a grid of square
+//! pixels and highlights the pixels that are intersected by the line.
+
+//! Movable square. Two of these are use to define a line.
+
+//! The two control points are distinguished by the boolean member
+//! first_point_p.
 class CustomRectItem : public QGraphicsRectItem {
 public:
   explicit CustomRectItem(const QRectF &rect) : QGraphicsRectItem(rect) {
@@ -13,11 +21,21 @@ public:
     this->setFlag(QGraphicsItem::ItemSendsScenePositionChanges);
   }
 
+  //! Attach a line to the control point.
+
+  //! For each line this should be called twice for two different instances of
+  //! CustomRectItem and different second parameter. Call addLine before adding
+  //! the CustomRectItem to the scene. This ensures that the line coordinates
+  //! are in a consistent state.
   void addLine(QGraphicsLineItem *line, bool is_first_point_p) {
     this->line = line;
     first_point_p = is_first_point_p;
   }
 
+  //! Display a label below the control point.
+
+  //! Call addLabel before setPos. This ensures that the point coordinates are
+  //! displayed correctly.
   void addLabel() {
     text = new QGraphicsTextItem();
     text->setPos(this->pos());
@@ -26,6 +44,7 @@ public:
   }
 
 protected:
+  //! Update line parameters when the control point is moved with the mouse.
   QVariant itemChange(GraphicsItemChange change, const QVariant &value) {
     if (((ItemPositionChange == change) && scene())) {
       // value is the same as pos();
@@ -83,6 +102,8 @@ protected:
   }
 
 private:
+  //! Update one of the two points of the line. The bool first_point_p chooses
+  //! the point.
   void moveLineToCenter(QPointF newPos) {
     {
       auto p1 = (first_point_p) ? (newPos) : (line->line().p1());
@@ -92,6 +113,7 @@ private:
     }
   }
 
+  //! Update the text label position.
   void moveTextToCenter(QPointF newPos) {
     if (text) {
       text->setPos(newPos);
@@ -187,12 +209,12 @@ int main(int argc, char **argv) {
 
         scene->addItem(handle_center);
         scene->addItem(handle_periph);
+        handle_center->addLabel();
+        handle_periph->addLabel();
         // change position of handles now, so that the line is redrawn by
         // CustomRect::itemChange;
         handle_center->setPos(150, 150);
         handle_periph->setPos(130, 280);
-        handle_center->addLabel();
-        handle_periph->addLabel();
         {
           auto tr = QTransform();
 
