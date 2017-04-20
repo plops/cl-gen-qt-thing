@@ -1,5 +1,6 @@
 #include <QApplication>
 #include <QDebug>
+#include <QGraphicsItem>
 #include <QGraphicsItemGroup>
 #include <QGraphicsLineItem>
 #include <QGraphicsRectItem>
@@ -48,40 +49,6 @@ protected:
   QVariant itemChange(GraphicsItemChange change, const QVariant &value) {
     if (((ItemPositionChange == change) && scene())) {
       // value is the same as pos();
-      {
-        auto dx = 20;
-        auto dy = dx;
-        auto nx = 10;
-        auto ny = nx;
-
-        {
-          auto p0 = line->line().p1();
-          auto p1 = line->line().p2();
-          auto diff = (p1 - p0);
-          auto horizontal_p = (diff.y() < diff.x());
-          auto nbig = (horizontal_p) ? (nx) : (ny);
-
-          for (unsigned int i = 0; (i < nbig); i += 1) {
-            {
-              auto j = ((dy * i));
-              auto eps = -2;
-
-              {
-                auto y1 = (j - eps);
-                auto x1 = (i - eps);
-                auto y2 = ((1 + j) + eps);
-                auto x2 = ((1 + i) + eps);
-                auto rect = (horizontal_p) ? (QRectF(x1, y1, dx, dy))
-                                           : (QRectF(y1, x1, dx, dy));
-
-                this->scene()->addRect(rect, QPen(Qt::green, 4, Qt::SolidLine,
-                                                  Qt::FlatCap, Qt::MiterJoin));
-              }
-            }
-          }
-        }
-      }
-
       moveLineToCenter(value.toPointF());
       if (text) {
         {
@@ -125,6 +92,39 @@ private:
   bool first_point_p = false;
 };
 
+class CustomItemGridGroup : public QGraphicsItemGroup {
+public:
+  explicit CustomItemGridGroup(int dx, int dy, int nx, int ny)
+      : m_dx(dx), m_dy(dy), m_nx(nx), m_ny(ny) {
+    // draw grid
+    {
+      auto dx = m_dx;
+      auto dy = m_dy;
+      auto nx = m_nx;
+      auto ny = m_ny;
+
+      for (unsigned int i = 0; (i < ny); i += 1) {
+        {
+          auto x1 = (dx * (1 + i));
+          auto y1 = (dy * 1);
+          auto x2 = x1;
+          auto y2 = (dy * ny);
+
+          this->addToGroup(new QGraphicsLineItem(QLineF(x1, y1, x2, y2)));
+        }
+      }
+
+      // highlight one rectangle;
+    }
+  }
+
+private:
+  unsigned int m_dx;
+  unsigned int m_dy;
+  unsigned int m_nx;
+  unsigned int m_ny;
+};
+
 int main(int argc, char **argv) {
   if ((0 == argc)) {
     return 0;
@@ -144,58 +144,11 @@ int main(int argc, char **argv) {
 
       scene->setBackgroundBrush(Qt::white);
       w.setScene(scene);
-      // draw grid
-      {
-        auto dx = 20;
-        auto dy = dx;
-        auto nx = 10;
-        auto ny = nx;
-
-        for (unsigned int i = 0; (i < ny); i += 1) {
-          {
-            auto x1 = (dx * (1 + i));
-            auto y1 = (dy * 1);
-            auto x2 = x1;
-            auto y2 = (dy * ny);
-
-            scene->addLine(QLineF(x1, y1, x2, y2));
-          }
-        }
-
-        for (unsigned int i = 0; (i < nx); i += 1) {
-          {
-            auto y1 = (dy * (1 + i));
-            auto x1 = (dx * 1);
-            auto y2 = y1;
-            auto x2 = (dx * nx);
-
-            scene->addLine(QLineF(x1, y1, x2, y2));
-          }
-        }
-
-        // highlight one rectangle;
-        {
-          auto i = 4;
-          auto j = 3;
-          auto eps = -2;
-
-          {
-            auto y1 = ((dy * j) - eps);
-            auto x1 = ((dx * i) - eps);
-            auto y2 = ((dy * (1 + j)) + eps);
-            auto x2 = ((dx * (1 + i)) + eps);
-
-            scene->addRect(
-                QRectF(x1, y1, (x2 - x1), (y2 - y1)),
-                QPen(Qt::red, 3, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin));
-          }
-        }
-      }
-
       // two handles to define the line
       {
         auto w = (1.7e+1f);
         auto c = (w / (-2.e+0f));
+        auto grid = new CustomItemGridGroup(20, 20, 10, 10);
         auto handle_center = new CustomRectItem(QRectF(c, c, w, w));
         auto handle_periph = new CustomRectItem(QRectF(c, c, w, w));
 
@@ -207,6 +160,7 @@ int main(int argc, char **argv) {
           handle_periph->addLine(line, false);
         }
 
+        scene->addItem(grid);
         scene->addItem(handle_center);
         scene->addItem(handle_periph);
         handle_center->addLabel();
