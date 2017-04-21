@@ -6,6 +6,14 @@
 ;; compile small qt
 ;; http://stackoverflow.com/questions/41812121/qt-lite-and-configuration-changes-in-qt-5-8
 ;; configure -list-features
+
+;; event propagation between graphicsitems
+;; http://stackoverflow.com/questions/10590881/events-and-signals-in-qts-qgraphicsitem-how-is-this-supposed-to-work
+
+;; http://stackoverflow.com/questions/4922801/adding-signals-slots-qobject-to-qgraphicsitem-performance-hit
+;; qt-graphics-view-in-depth https://www.youtube.com/watch?v=s3sHIheBe94
+
+;; ttps://woboq.com/blog/how-qt-signals-slots-work.html
 (in-package :cl-cpp-generator)
 
 (defmacro e (&body body)
@@ -94,13 +102,16 @@
 					  explicit
 					  :parent-ctor
 					  ((QGraphicsLineItem line)))
-			  (funcall this->setFlag "QGraphicsItem::ItemSendsScenePositionChanges"))
+			  (funcall this->setFlag "QGraphicsItem::ItemSendsScenePositionChanges")
+			  (funcall this->setFlag "QGraphicsItem::ItemSendsGeometryChanges"))
 		(function (itemChange ((change :type GraphicsItemChange)
 				       (value :type "const QVariant&")) QVariant)
+			  (<< (funcall qDebug) (string "change customLine ") (funcall this->pos) (string " ") value)
 			  (if (&& (== ItemPositionChange change)
 				  (funcall scene))
 			      (statements
-			       (raw "// value is the same as pos()")))
+			       (raw "// value is the same as pos()")
+			       (<< (funcall qDebug) (string "change pos customLine ") (funcall this->pos) (string " ") value)))
 			  (return (funcall "QGraphicsItem::itemChange" change value))))
 	
 	(with-compilation-unit

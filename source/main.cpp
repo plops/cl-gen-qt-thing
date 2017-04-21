@@ -55,11 +55,14 @@ class CustomLineItem : public QGraphicsLineItem {
 public:
   explicit CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
     this->setFlag(QGraphicsItem::ItemSendsScenePositionChanges);
+    this->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
   }
 
   QVariant itemChange(GraphicsItemChange change, const QVariant &value) {
+    (qDebug() << "change customLine " << this->pos() << " " << value);
     if (((ItemPositionChange == change) && scene())) {
       // value is the same as pos();
+      (qDebug() << "change pos customLine " << this->pos() << " " << value);
     }
 
     return QGraphicsItem::itemChange(change, value);
