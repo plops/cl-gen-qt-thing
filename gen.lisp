@@ -38,201 +38,138 @@
        code))
     (sb-ext:run-program "/usr/bin/clang-format" (list "-i" (namestring fn)))))
 
-(defun headerify (code)
-  (when code
-    (if (listp code)
-	(case (car code)
-	  (function (destructuring-bind ((name params &optional ret &key ctor specifier parent-ctor) &rest function-body) (cdr code)
-		      ;; fixme: handle inline
-		      `(function ,(first (cdr code)))))
-	  (t code))
-	code)))
-
-#+nil
-(let ((code `(function (CustomLineItem ((line :type "const QLineF&"))
-						 explicit
-						 :parent-ctor
-						 ((QGraphicsLineItem line)))
-				 (let ((w :init 17)
-				       (h :init w))
-				   (setf m_p1 (new (funcall CustomRectItem
-							    (funcall QRectF (- (funcall line.p1) (* .5 (funcall QPointF w h)))
-								     (funcall QSizeF w h))
-							    this
-							    this
-							    true)))
-				   (setf m_p2 (new (funcall CustomRectItem
-							    (funcall QRectF (- (funcall line.p2) (* .5 (funcall QPointF w h)))
-								     (funcall QSizeF w h))
-							    this
-							    this
-							    false)))))))
-  (format nil "~a" (headerify code))
-  #+nil (destructuring-bind ((name params &optional ret &key ctor specifier parent-ctor) &rest function-body) (cdr code)
-    (format nil "~a" `(function ,(first (cdr code))))))
-
 (progn
   (defparameter *main-cpp-filename*  (merge-pathnames "stage/cl-gen-qt-thing/source/main.cpp"
 						      (user-homedir-pathname)))
-  (let ((code `(with-compilation-unit
-		   (class CustomLineItem ("public QGraphicsLineItem")
+  (let (
+	(code `(with-compilation-unit
+		  ; (include <QApplication>)
+		 ;(include <QGraphicsScene>)
+		 ;(include <QGraphicsView>)
+		 ;(include <QGraphicsItem>)
+		 ;(include <QGraphicsRectItem>)
+		 (include <CustomLineItem.h>)
+		 (include <CustomRectItem.h>)
+		 ;(include <QGraphicsLineItem>)
+		 ;(include <QGraphicsTextItem>)
+		 ;(include <QGraphicsItemGroup>)
+		 (include <QDebug>)
+		 ;(include <vector>)
+		 ;(include <utility>)
+
+		 (function ("CustomLineItem::CustomLineItem" ((line :type "const QLineF&"))
+							     nil 
+							     :parent-ctor
+							     ((QGraphicsLineItem line)))
+			   (let ((w :init 17)
+				 (h :init w))
+			     (setf m_p1 (new (funcall CustomRectItem
+						      (funcall QRectF (- (funcall line.p1) (* .5 (funcall QPointF w h)))
+							       (funcall QSizeF w h))
+						      this
+						      this
+						      true)))
+			     (setf m_p2 (new (funcall CustomRectItem
+						      (funcall QRectF (- (funcall line.p2) (* .5 (funcall QPointF w h)))
+							       (funcall QSizeF w h))
+						      this
+						      this
+						      false)))))
+		 (function ("CustomLineItem::itemChange" ((change :type GraphicsItemChange)
+							  (value :type "const QVariant&")) QVariant)
+			   (<< (funcall qDebug) (string "change customLine ") (funcall this->pos) (string " ") value)
+			   (if (&& (== ItemPositionChange change)
+				   (funcall scene))
+			       (statements
+				(raw "// value is the same as pos()")
+				(<< (funcall qDebug) (string "change pos customLine ") (funcall this->pos) (string " ") value)))
+			   (return (funcall "QGraphicsItem::itemChange" change value)))))
+	(header `(with-compilation-unit
+		     (raw "#pragma once")
+		   (include <QtCore>)
+		   (include <QGraphicsItem>)
+		   (raw "class CustomRectItem;")
+		     (class CustomLineItem ("public QGraphicsLineItem")
 		    (access-specifier public)
 		    (function (CustomLineItem ((line :type "const QLineF&"))
 					      explicit
-					      :parent-ctor
-					      ((QGraphicsLineItem line)))
-			      (let ((w :init 17)
-				    (h :init w))
-				(setf m_p1 (new (funcall CustomRectItem
-							 (funcall QRectF (- (funcall line.p1) (* .5 (funcall QPointF w h)))
-								  (funcall QSizeF w h))
-							 this
-							 this
-							 true)))
-				(setf m_p2 (new (funcall CustomRectItem
-							 (funcall QRectF (- (funcall line.p2) (* .5 (funcall QPointF w h)))
-								  (funcall QSizeF w h))
-							 this
-							 this
-							 false)))))
-		    #+nil (function (itemChange ((change :type GraphicsItemChange)
+					      ;:parent-ctor
+					      ;((QGraphicsLineItem line))
+					      )
+			      )
+		      (function (itemChange ((change :type GraphicsItemChange)
 						 (value :type "const QVariant&")) QVariant)
-				    (<< (funcall qDebug) (string "change customLine ") (funcall this->pos) (string " ") value)
-				    (if (&& (== ItemPositionChange change)
-					    (funcall scene))
-					(statements
-					 (raw "// value is the same as pos()")
-					 (<< (funcall qDebug) (string "change pos customLine ") (funcall this->pos) (string " ") value)))
-				    (return (funcall "QGraphicsItem::itemChange" change value)))
+				)
 		    (access-specifier private)
-		    (decl ((m_p1 :type "CustomRectItem*" )
-			   (m_p2 :type "CustomRectItem*" )))))))
-    (write-source "CustomLineItem" "h" (headerify code))
+		    (decl ((m_p1 :type "CustomRectItem*" :init nullptr )
+			   (m_p2 :type "CustomRectItem*" :init nullptr )))))))
+    (write-source "CustomLineItem" "h" header)
     (write-source "CustomLineItem" "cpp" code)
     )
 
-  (let ((code `(with-compilation-unit
-		   
-		   
-		   (raw "//! Movable square. Two of these are use to define a line.
+  (let (
+	(code `(with-compilation-unit
+		   ;; (include <QApplication>)
+		 ;; (include <QGraphicsScene>)
+		 ;; (include <QGraphicsView>)
+		 ;; (include <QGraphicsItem>)
+		 ;; (include <QGraphicsRectItem>)
+		 ;; (include <CustomLineItem.h>)
+		    (include <CustomRectItem.h>)
+		 ;; (include <QGraphicsLineItem>)
+		 ;; (include <QGraphicsTextItem>)
+		 ;; (include <QGraphicsItemGroup>)
+		 ;; (include <QDebug>)
+		 ;; (include <vector>)
+		 ;; (include <utility>)
 
-//! The two control points are distinguished by the boolean member first_point_p.")
-		 
-		 (class CustomRectItem ("public QGraphicsRectItem")
+		   (function ("CustomRectItem::CustomRectItem" ((rect :type "const QRectF&")
+								(parent :type QGraphicsItem*)
+								(line :type CustomLineItem*)
+								(first_point_p :type bool))
+							       nil
+							       :ctor ((m_line line)
+								      (m_first_point_p first_point_p))
+							       :parent-ctor
+							       ((QGraphicsRectItem rect parent)))
+		    (funcall this->setFlag "QGraphicsItem::ItemIsMovable")
+		    (funcall this->setFlag "QGraphicsItem::ItemSendsScenePositionChanges"))
+		 (function ("CustomRectItem::itemChange" ((change :type GraphicsItemChange)
+							  (value :type "const QVariant&")) QVariant)
+			   #+nil (<< (funcall qDebug) (string "change rect ") (funcall this->pos) (string " ")  (string " ") value)
+			   (if (&& (== ItemPositionChange change)
+				   (funcall scene))
+			       (statements
+				(funcall moveLineToCenter (funcall value.toPointF))))
+			   (return (funcall "QGraphicsItem::itemChange" change value)))
+		 (function ("CustomRectItem::moveLineToCenter" ((newPos :type QPointF)) void)
+			   (let ((p1 :init (? m_first_point_p newPos "m_line->line().p1()"))
+				 (p2 :init (? m_first_point_p "m_line->line().p2()" newPos)))
+			     (funcall "m_line->setLine" (funcall QLineF p1 p2))))))
+	(header `(with-compilation-unit
+		     (raw "#pragma once")
+		   (include <QtCore>)
+
+		   (include <QGraphicsItem>)
+		   (include <CustomLineItem.h>)
+		   (class CustomRectItem ("public QGraphicsRectItem")
 			(access-specifier public)
 			(function (CustomRectItem ((rect :type "const QRectF&")
 						   (parent :type QGraphicsItem*)
 						   (line :type CustomLineItem*)
 						   (first_point_p :type bool))
-						  explicit
-						  :ctor ((m_line line)
-							 (m_first_point_p first_point_p))
-						  :parent-ctor
-						  ((QGraphicsRectItem rect parent)))
-				  (funcall this->setFlag "QGraphicsItem::ItemIsMovable")
-				  (funcall this->setFlag "QGraphicsItem::ItemSendsScenePositionChanges"))
+						  explicit))
 			(access-specifier private)
 			(function (itemChange ((change :type GraphicsItemChange)
-					       (value :type "const QVariant&")) QVariant)
-				  #+nil (<< (funcall qDebug) (string "change rect ") (funcall this->pos) (string " ")  (string " ") value)
-				  (if (&& (== ItemPositionChange change)
-					  (funcall scene))
-				      (statements
-				       (funcall moveLineToCenter (funcall value.toPointF))))
-				  (return (funcall "QGraphicsItem::itemChange" change value)))
-			(function (moveLineToCenter ((newPos :type QPointF)) void)
-				  (let ((p1 :init (? m_first_point_p newPos "m_line->line().p1()"))
-					(p2 :init (? m_first_point_p "m_line->line().p2()" newPos)))
-				    (funcall "m_line->setLine" (funcall QLineF p1 p2))))
-			(decl ((m_line :type "CustomLineItem*" ;:init nullptr
+					       (value :type "const QVariant&")) QVariant))
+			(function (moveLineToCenter ((newPos :type QPointF)) void))
+			(decl ((m_line :type "CustomLineItem*"  :init nullptr
 				       )
 					;(m_text :type "QGraphicsTextItem*" :init nullptr)
 					;(m_pixels :type "CustomItemPixelsGroup*" :init nullptr)
-			       (m_first_point_p :type bool ;:init false
-						))))
-		 #+nil (class CustomRectItem ("public QGraphicsRectItem")
-			      (access-specifier public)
-			      (function (CustomRectItem ((rect :type "const QRectF&")
-							 )
-							explicit
-							:parent-ctor
-							((QGraphicsRectItem rect)))
-					(funcall this->setFlag "QGraphicsItem::ItemIsMovable")
-					;(funcall this->setFlag "QGraphicsItem::ItemSendsGeometryChanges")
-					(funcall this->setFlag "QGraphicsItem::ItemSendsScenePositionChanges"))
-			      (raw "//! Attach a line to the control point. 
-
-//! For each line this should be called twice for two different instances of CustomRectItem and different second parameter. Call addLine before adding the CustomRectItem to the scene. This ensures that the line coordinates are in a consistent state.")
-			      (function (addLine ((line :type CustomLineItem*)
-						  (is_first_point_p :type bool)) void)
-					(setf m_line line
-					      m_first_point_p is_first_point_p))
-			      (raw "//! Display a label below the control point. 
-
-//! Call addLabel before setPos. This ensures that the point coordinates are displayed correctly.")
-			      (function (addLabel ()
-						  void)
-					(setf m_text (new (funcall QGraphicsTextItem)))
-					(funcall m_text->setPos (funcall this->pos))
-					(funcall m_text->setPlainText (string "Barev"))
-					(funcall "this->scene()->addItem" m_text))
-			      (access-specifier protected)
-			      (raw "//! Update line parameters when the control point is moved with the mouse.")
-			      (function (itemChange ((change :type GraphicsItemChange)
-						     (value :type "const QVariant&")) QVariant)
-					;; http://stackoverflow.com/questions/32192607/how-to-use-itemchange-from-qgraphicsitem-in-qt
-					;(<< (funcall qDebug) (string "change ") (funcall this->pos) (string " ") value)
-					(if (&& (== ItemPositionChange change)
-						(funcall scene))
-					    (statements
-					     (raw "// value is the same as pos()")
-					     (funcall moveLineToCenter (funcall value.toPointF))
-					     #+nil (funcall updatePixels)
-					     (if m_text
-						 (let ((s :type QString)
-						       (st :type QTextStream :ctor &s))
-						   (funcall st.setFieldWidth 4)
-						   (funcall st.setFieldAlignment "QTextStream::AlignCenter")
-						   (funcall st.setPadChar (char #\_))
-						   (<< st (funcall "value.toPointF().x")
-						       (funcall "value.toPointF().y"))
-						   
-						   (funcall m_text->setPlainText s)
-						   (funcall moveTextToCenter (funcall value.toPointF))))
-					     
-					     ))
-					(return (funcall "QGraphicsItem::itemChange" change value)))
-			      
-			      (access-specifier private)
-			      (raw "//! Update one of the two points of the line. The bool m_first_point_p chooses the point.")
-			      (function (moveLineToCenter ((newPos :type QPointF)) void)
-					(let ((p1 :init (? m_first_point_p newPos "m_line->line().p1()"))
-					      (p2 :init (? m_first_point_p "m_line->line().p2()" newPos)))
-					  (funcall m_line->setLine (funcall QLineF p1 p2))))
-			      (raw "//! Update the text label position.")
-			      (function (moveTextToCenter ((newPos :type QPointF)) void)
-					(if m_text
-					    (funcall m_text->setPos newPos)))
-			      (raw "//! Update the list of highlighted pixels. Call this aftes moveLineToCenter.")
-			      #+nil (function (updatePixels () void)
-					      (if m_line
-						  (statements
-						   (let ((p1 :init "m_line->line().p1()")
-							 (p2 :init "m_line->line().p2()")
-							 (pos :type "std::vector<std::pair<int,int> >" :init (list (list 1 1)
-														   (list 2 2)
-														   (list 2 3))))
-						     (if m_pixels
-							 (statements
-							  (funcall "this->scene()->removeItem" m_pixels)))
-						     (setf m_pixels (new (funcall CustomItemPixelsGroup 20 20 10 10 pos)))
-						     (funcall "this->scene()->addItem" m_pixels)))))
-			      (decl ((m_line :type "CustomLineItem*" :init nullptr)
-				     (m_text :type "QGraphicsTextItem*" :init nullptr)
-					;(m_pixels :type "CustomItemPixelsGroup*" :init nullptr)
-				     (m_first_point_p :type bool :init false)))))
-	  ))
-    (write-source "CustomRectItem" "h" (headerify code))
+			       (m_first_point_p :type bool  :init false
+						)))))))
+    (write-source "CustomRectItem" "h" header)
     (write-source "CustomRectItem" "cpp" code))
   
   (with-open-file (s *main-cpp-filename*
@@ -246,17 +183,18 @@
      `(with-compilation-unit
 					;(include <QtGui>)
 					; (include "main_win.h")
-	  (include <QApplication>)
+	  (include <QtCore>)
+	(include <QApplication>)
 	(include <QGraphicsScene>)
 	(include <QGraphicsView>)
 	(include <QGraphicsItem>)
-	(include <QGraphicsRectItem>)
-	(include <CustomRectItem>)
-	(include <CustomLineItem>)
-	(include <QGraphicsLineItem>)
-	(include <QGraphicsTextItem>)
-	(include <QGraphicsItemGroup>)
-	(include <QDebug>)
+	;(include <QGraphicsRectItem>)
+	;(include <CustomRectItem.h>)
+	(include <CustomLineItem.h>)
+	;(include <QGraphicsLineItem>)
+	;(include <QGraphicsTextItem>)
+	;(include <QGraphicsItemGroup>)
+					;(include <QDebug>)
 	(include <vector>)
 	(include <utility>)
 	
@@ -462,3 +400,84 @@
 
 
 
+#+nil (class CustomRectItem ("public QGraphicsRectItem")
+			      (access-specifier public)
+			      (function (CustomRectItem ((rect :type "const QRectF&")
+							 )
+							explicit
+							:parent-ctor
+							((QGraphicsRectItem rect)))
+					(funcall this->setFlag "QGraphicsItem::ItemIsMovable")
+					;(funcall this->setFlag "QGraphicsItem::ItemSendsGeometryChanges")
+					(funcall this->setFlag "QGraphicsItem::ItemSendsScenePositionChanges"))
+			      (raw "//! Attach a line to the control point. 
+
+//! For each line this should be called twice for two different instances of CustomRectItem and different second parameter. Call addLine before adding the CustomRectItem to the scene. This ensures that the line coordinates are in a consistent state.")
+			      (function (addLine ((line :type CustomLineItem*)
+						  (is_first_point_p :type bool)) void)
+					(setf m_line line
+					      m_first_point_p is_first_point_p))
+			      (raw "//! Display a label below the control point. 
+
+//! Call addLabel before setPos. This ensures that the point coordinates are displayed correctly.")
+			      (function (addLabel ()
+						  void)
+					(setf m_text (new (funcall QGraphicsTextItem)))
+					(funcall m_text->setPos (funcall this->pos))
+					(funcall m_text->setPlainText (string "Barev"))
+					(funcall "this->scene()->addItem" m_text))
+			      (access-specifier protected)
+			      (raw "//! Update line parameters when the control point is moved with the mouse.")
+			      (function (itemChange ((change :type GraphicsItemChange)
+						     (value :type "const QVariant&")) QVariant)
+					;; http://stackoverflow.com/questions/32192607/how-to-use-itemchange-from-qgraphicsitem-in-qt
+					;(<< (funcall qDebug) (string "change ") (funcall this->pos) (string " ") value)
+					(if (&& (== ItemPositionChange change)
+						(funcall scene))
+					    (statements
+					     (raw "// value is the same as pos()")
+					     (funcall moveLineToCenter (funcall value.toPointF))
+					     #+nil (funcall updatePixels)
+					     (if m_text
+						 (let ((s :type QString)
+						       (st :type QTextStream :ctor &s))
+						   (funcall st.setFieldWidth 4)
+						   (funcall st.setFieldAlignment "QTextStream::AlignCenter")
+						   (funcall st.setPadChar (char #\_))
+						   (<< st (funcall "value.toPointF().x")
+						       (funcall "value.toPointF().y"))
+						   
+						   (funcall m_text->setPlainText s)
+						   (funcall moveTextToCenter (funcall value.toPointF))))
+					     
+					     ))
+					(return (funcall "QGraphicsItem::itemChange" change value)))
+			      
+			      (access-specifier private)
+			      (raw "//! Update one of the two points of the line. The bool m_first_point_p chooses the point.")
+			      (function (moveLineToCenter ((newPos :type QPointF)) void)
+					(let ((p1 :init (? m_first_point_p newPos "m_line->line().p1()"))
+					      (p2 :init (? m_first_point_p "m_line->line().p2()" newPos)))
+					  (funcall m_line->setLine (funcall QLineF p1 p2))))
+			      (raw "//! Update the text label position.")
+			      (function (moveTextToCenter ((newPos :type QPointF)) void)
+					(if m_text
+					    (funcall m_text->setPos newPos)))
+			      (raw "//! Update the list of highlighted pixels. Call this aftes moveLineToCenter.")
+			      #+nil (function (updatePixels () void)
+					      (if m_line
+						  (statements
+						   (let ((p1 :init "m_line->line().p1()")
+							 (p2 :init "m_line->line().p2()")
+							 (pos :type "std::vector<std::pair<int,int> >" :init (list (list 1 1)
+														   (list 2 2)
+														   (list 2 3))))
+						     (if m_pixels
+							 (statements
+							  (funcall "this->scene()->removeItem" m_pixels)))
+						     (setf m_pixels (new (funcall CustomItemPixelsGroup 20 20 10 10 pos)))
+						     (funcall "this->scene()->addItem" m_pixels)))))
+			      (decl ((m_line :type "CustomLineItem*" :init nullptr)
+				     (m_text :type "QGraphicsTextItem*" :init nullptr)
+					;(m_pixels :type "CustomItemPixelsGroup*" :init nullptr)
+				     (m_first_point_p :type bool :init false))))

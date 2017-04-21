@@ -1,14 +1,9 @@
-#include <CustomLineItem>
-#include <CustomRectItem>
+#include <CustomLineItem.h>
 #include <QApplication>
-#include <QDebug>
 #include <QGraphicsItem>
-#include <QGraphicsItemGroup>
-#include <QGraphicsLineItem>
-#include <QGraphicsRectItem>
 #include <QGraphicsScene>
-#include <QGraphicsTextItem>
 #include <QGraphicsView>
+#include <QtCore>
 #include <utility>
 #include <vector>
 //! This program displays a line on a canvas. The parameters of the line can be
