@@ -25,7 +25,7 @@
 ;; https://github.com/mjspncr/lzz3
 
 (defun write-lzz (name code)
-  (let ((fn (merge-pathnames (format nil "stage/cl-gen-qt-thing/source/~a.lzz" fn)
+  (let ((fn (merge-pathnames (format nil "stage/cl-gen-qt-thing/source/~a.lzz" name)
 			     (user-homedir-pathname))))
     (with-open-file (s fn
 		       :direction :output
@@ -36,8 +36,8 @@
        :clear-env t
        :code 
        code))
-    (sb-ext:run-program "/usr/bin/clang-format" (list "-i" fn))
-    (sb-ext:run-program "/usr/bin/lzz" (list fn))))
+    (sb-ext:run-program "/usr/bin/clang-format" (list "-i" (namestring fn)))
+    (sb-ext:run-program "/usr/bin/lzz" (list (namestring fn)))))
 
 
 (progn
@@ -45,6 +45,20 @@
 						      (user-homedir-pathname)))
   
   (write-lzz "CustomLineItem" `(with-compilation-unit
+				     (include <QApplication>)
+	(include <QGraphicsScene>)
+	(include <QGraphicsView>)
+	(include <QGraphicsItem>)
+	(include <QGraphicsRectItem>)
+	(include <CustomRectItem.h>)
+	(include <CustomLineItem.h>)
+	(include <QGraphicsLineItem>)
+	(include <QGraphicsTextItem>)
+	(include <QGraphicsItemGroup>)
+	(include <QDebug>)
+	(include <vector>)
+	(include <utility>)
+	
 					      (class CustomLineItem ("public QGraphicsLineItem")
 						  (access-specifier public)
 						  (function (CustomLineItem ((line :type "const QLineF&"))
@@ -77,22 +91,16 @@
 						  (access-specifier private)
 						  (decl ((m_p1 :type "CustomRectItem*" )
 							 (m_p2 :type "CustomRectItem*" ))))))
-  (with-open-file (s *main-cpp-filename*
-		     :direction :output
-		     :if-exists :supersede
-		     :if-does-not-exist :create)
-    (emit-cpp
-     :str s
-     :clear-env t
-     :code 
-     `(with-compilation-unit
-					; (include "main_win.h")
-	  (include <QApplication>)
-					;(include <QtGui>)
+
+  (write-lzz "CustomRectItem"
+	     `(with-compilation-unit
+		  (include <QApplication>)
 	(include <QGraphicsScene>)
 	(include <QGraphicsView>)
 	(include <QGraphicsItem>)
 	(include <QGraphicsRectItem>)
+	(include <CustomRectItem.h>)
+	(include <CustomLineItem.h>)
 	(include <QGraphicsLineItem>)
 	(include <QGraphicsTextItem>)
 	(include <QGraphicsItemGroup>)
@@ -100,84 +108,7 @@
 	(include <vector>)
 	(include <utility>)
 	
-	(raw "//! This program displays a line on a canvas. The parameters of the line can be adjusted with two control points. The canvas also displays a grid of square pixels and highlights the pixels that are intersected by the line.
-
-")
-
-	(class CustomItemPixelsGroup ("public QGraphicsItemGroup")
-	       (access-specifier public)
-	       (function (CustomItemPixelsGroup ((dx :type int)
-						 (dy :type int)
-						 (nx :type int)
-						 (ny :type int)
-						 (vecs :type "std::vector<std::pair<int,int> >"))
-						explicit
-						:ctor
-						((m_dx dx)
-						 (m_dy dy)
-						 (m_nx nx)
-						 (m_ny ny)))
-			 (with-compilation-unit
-			     (let ((dx :init m_dx)
-				   (dy :init m_dy)
-				   (nx :init m_nx)
-				   (ny :init m_ny))
-			       (for-range (v vecs)
-				(let ((i :init "v.first")
-				      (j :init "v.second")
-				      (eps :init -2))
-				  (let ((y1 :init (- (* dy j) eps))
-					(x1 :init (- (* dx i) eps))
-					(y2 :init (+ (* dy (+ 1 j)) eps))
-					(x2 :init (+ (* dx (+ 1 i)) eps)))
-				    (funcall "this->addToGroup" (new (funcall QGraphicsRectItem
-									      (funcall QRectF x1 y1 (- x2 x1) (- y2 y1))
-									      #+nil  (funcall QPen "Qt::red" 3 "Qt::SolidLine"
-											      "Qt::FlatCap"
-											      "Qt::MiterJoin"))))))))))
-	     
-	       (access-specifier private)
-	       (decl ((m_dx :type "unsigned int")
-		      (m_dy :type "unsigned int")
-		      (m_nx :type "unsigned int")
-		      (m_ny :type "unsigned int"))))
-
-
-	
-	(class CustomLineItem ("public QGraphicsLineItem")
-	       (access-specifier public)
-		(function (CustomLineItem ((line :type "const QLineF&"))
-					  explicit
-					  :parent-ctor
-					  ((QGraphicsLineItem line)))
-			  (let ((w :init 17)
-				(h :init w))
-			   (setf m_p1 (new (funcall CustomRectItem
-						    (funcall QRectF (- (funcall line.p1) (* .5 (funcall QPointF w h)))
-							     (funcall QSizeF w h))
-						    this
-						    this
-						    true)))
-			   (setf m_p2 (new (funcall CustomRectItem
-						    (funcall QRectF (- (funcall line.p2) (* .5 (funcall QPointF w h)))
-							     (funcall QSizeF w h))
-						    this
-						    this
-						    false)))))
-		#+nil (function (itemChange ((change :type GraphicsItemChange)
-				       (value :type "const QVariant&")) QVariant)
-			  (<< (funcall qDebug) (string "change customLine ") (funcall this->pos) (string " ") value)
-			  (if (&& (== ItemPositionChange change)
-				  (funcall scene))
-			      (statements
-			       (raw "// value is the same as pos()")
-			       (<< (funcall qDebug) (string "change pos customLine ") (funcall this->pos) (string " ") value)))
-			  (return (funcall "QGraphicsItem::itemChange" change value)))
-		(access-specifier private)
-		(decl ((m_p1 :type "CustomRectItem*" :init nullptr)
-		       (m_p2 :type "CustomRectItem*" :init nullptr))))
-	
-	(with-compilation-unit
+		  
 	 (raw "//! Movable square. Two of these are use to define a line.
 
 //! The two control points are distinguished by the boolean member first_point_p.")
@@ -208,10 +139,12 @@
 			  (let ((p1 :init (? m_first_point_p newPos "m_line->line().p1()"))
 				(p2 :init (? m_first_point_p "m_line->line().p2()" newPos)))
 			    (funcall "m_line->setLine" (funcall QLineF p1 p2))))
-		(decl ((m_line :type "CustomLineItem*" :init nullptr)
+		(decl ((m_line :type "CustomLineItem*" ;:init nullptr
+			       )
 		       ;(m_text :type "QGraphicsTextItem*" :init nullptr)
 		       ;(m_pixels :type "CustomItemPixelsGroup*" :init nullptr)
-		       (m_first_point_p :type bool :init false))))
+		       (m_first_point_p :type bool ;:init false
+					))))
 	 #+nil (class CustomRectItem ("public QGraphicsRectItem")
 		(access-specifier public)
 		(function (CustomRectItem ((rect :type "const QRectF&")
@@ -292,7 +225,80 @@
 		(decl ((m_line :type "CustomLineItem*" :init nullptr)
 		       (m_text :type "QGraphicsTextItem*" :init nullptr)
 		       ;(m_pixels :type "CustomItemPixelsGroup*" :init nullptr)
-		       (m_first_point_p :type bool :init false)))))
+		       (m_first_point_p :type bool :init false))))))
+  
+  (with-open-file (s *main-cpp-filename*
+		     :direction :output
+		     :if-exists :supersede
+		     :if-does-not-exist :create)
+    (emit-cpp
+     :str s
+     :clear-env t
+     :code 
+     `(with-compilation-unit
+					;(include <QtGui>)
+					; (include "main_win.h")
+	  (include <QApplication>)
+	(include <QGraphicsScene>)
+	(include <QGraphicsView>)
+	(include <QGraphicsItem>)
+	(include <QGraphicsRectItem>)
+	(include <CustomRectItem>)
+	(include <CustomLineItem>)
+	(include <QGraphicsLineItem>)
+	(include <QGraphicsTextItem>)
+	(include <QGraphicsItemGroup>)
+	(include <QDebug>)
+	(include <vector>)
+	(include <utility>)
+	
+	(raw "//! This program displays a line on a canvas. The parameters of the line can be adjusted with two control points. The canvas also displays a grid of square pixels and highlights the pixels that are intersected by the line.
+
+")
+
+	(class CustomItemPixelsGroup ("public QGraphicsItemGroup")
+	       (access-specifier public)
+	       (function (CustomItemPixelsGroup ((dx :type int)
+						 (dy :type int)
+						 (nx :type int)
+						 (ny :type int)
+						 (vecs :type "std::vector<std::pair<int,int> >"))
+						explicit
+						:ctor
+						((m_dx dx)
+						 (m_dy dy)
+						 (m_nx nx)
+						 (m_ny ny)))
+			 (with-compilation-unit
+			     (let ((dx :init m_dx)
+				   (dy :init m_dy)
+				   (nx :init m_nx)
+				   (ny :init m_ny))
+			       (for-range (v vecs)
+				(let ((i :init "v.first")
+				      (j :init "v.second")
+				      (eps :init -2))
+				  (let ((y1 :init (- (* dy j) eps))
+					(x1 :init (- (* dx i) eps))
+					(y2 :init (+ (* dy (+ 1 j)) eps))
+					(x2 :init (+ (* dx (+ 1 i)) eps)))
+				    (funcall "this->addToGroup" (new (funcall QGraphicsRectItem
+									      (funcall QRectF x1 y1 (- x2 x1) (- y2 y1))
+									      #+nil  (funcall QPen "Qt::red" 3 "Qt::SolidLine"
+											      "Qt::FlatCap"
+											      "Qt::MiterJoin"))))))))))
+	     
+	       (access-specifier private)
+	       (decl ((m_dx :type "unsigned int")
+		      (m_dy :type "unsigned int")
+		      (m_nx :type "unsigned int")
+		      (m_ny :type "unsigned int"))))
+
+
+	
+	
+	
+	
 
 	
 	

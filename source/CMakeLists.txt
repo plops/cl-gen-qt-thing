@@ -15,11 +15,11 @@ set(CMAKE_AUTOMOC ON)
 #set(CMAKE_AUTOUIC ON)
 
 
-#add_library(main_win main_win.cpp)
-#target_link_libraries(main_win Qt5::Widgets)
+add_library(main_win CustomRectItem.cpp)
+target_link_libraries(main_win Qt5::Widgets)
 
 
 add_executable(qt_thing_app main.cpp)
-#target_link_libraries(qt_thing_app main_win)
+target_link_libraries(qt_thing_app main_win)
 target_link_libraries(qt_thing_app Qt5::Widgets)
 
