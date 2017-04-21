@@ -1,6 +1,7 @@
 #include <CustomLineItem.h>
 #include <CustomRectItem.h>
 #include <QDebug>
+#include <QGraphicsScene>
 CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
   {
     auto w = 17;
@@ -12,6 +13,12 @@ CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
     m_p2 = new CustomRectItem(QRectF(((-5.e-1f) * QPointF(w, h)), QSizeF(w, h)),
                               this, this, false);
     m_p2->setPos(line.p2());
+  }
+
+  {
+    std::vector<std::pair<int, int>> pos = {{1, 1}, {2, 2}, {2, 3}};
+
+    m_pixels = new CustomItemPixelsGroup(20, 20, 10, 10, pos, this);
   }
 }
 

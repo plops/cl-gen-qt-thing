@@ -5,7 +5,8 @@
 class CustomItemPixelsGroup : public QGraphicsItemGroup {
 public:
   explicit CustomItemPixelsGroup(int dx, int dy, int nx, int ny,
-                                 std::vector<std::pair<int, int>> vecs);
+                                 std::vector<std::pair<int, int>> vecs,
+                                 QGraphicsItem *parent);
 
 private:
   unsigned int m_dx;

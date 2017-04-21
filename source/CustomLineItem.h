@@ -1,4 +1,5 @@
 #pragma once
+#include <CustomItemPixelsGroup.h>
 #include <QGraphicsItem>
 #include <QtCore>
 class CustomRectItem;
@@ -10,4 +11,5 @@ public:
 private:
   CustomRectItem *m_p1 = nullptr;
   CustomRectItem *m_p2 = nullptr;
+  CustomItemPixelsGroup *m_pixels = nullptr;
 };

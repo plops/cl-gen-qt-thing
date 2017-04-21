@@ -46,6 +46,7 @@
 		   
 		   (include <CustomLineItem.h>)
 		 (include <CustomRectItem.h>)
+		 (include <QGraphicsScene>)
 		 (include <QDebug>)
 		 
 		 (function ("CustomLineItem::CustomLineItem" ((line :type "const QLineF&"))
@@ -69,12 +70,12 @@
 						      this
 						      false)))
 			     (funcall m_p2->setPos (funcall line.p2)))
-			   (setf m_pixels (funcall CustomItemPixelsGroup
-						      (funcall QRectF (* -.5 (funcall QPointF w h))
-							       (funcall QSizeF w h))
-						      this
-						      this
-						      false)))
+
+			   (let ((pos :type "std::vector<std::pair<int,int> >" :init (list (list 1 1)
+											   (list 2 2)
+											   (list 2 3))))
+			     
+			     (setf m_pixels (new (funcall CustomItemPixelsGroup 20 20 10 10 pos this)))))
 		 (function ("CustomLineItem::itemChange" ((change :type GraphicsItemChange)
 							  (value :type "const QVariant&")) QVariant)
 			   (<< (funcall qDebug) (string "change customLine ") (funcall this->pos) (string " ") value)
@@ -88,6 +89,7 @@
 		     (raw "#pragma once")
 		   (include <QtCore>)
 		   (include <QGraphicsItem>)
+		   (include <CustomItemPixelsGroup.h>)
 		   (raw "class CustomRectItem;")
 		   (class CustomLineItem ("public QGraphicsLineItem")
 			  (access-specifier public)
@@ -108,12 +110,12 @@
 		 (function ("CustomRectItem::CustomRectItem" ((rect :type "const QRectF&")
 							      (parent :type QGraphicsItem*)
 							      (line :type CustomLineItem*)
-							      (first_point_p :type bool))
+							      (first_point_p :type bool)
+							      )
 							     nil
 							     :ctor ((m_line line)
 								    (m_first_point_p first_point_p))
-							     :parent-ctor
-							     ((QGraphicsRectItem rect parent)))
+							     :parent-ctor ((QGraphicsRectItem rect parent)))
 			   (funcall this->setFlag "QGraphicsItem::ItemIsMovable")
 			   (funcall this->setFlag "QGraphicsItem::ItemSendsScenePositionChanges"))
 		 (function ("CustomRectItem::itemChange" ((change :type GraphicsItemChange)
@@ -161,18 +163,22 @@
 									    (dy :type int)
 									    (nx :type int)
 									    (ny :type int)
-									    (vecs :type "std::vector<std::pair<int,int> >"))
+									    (vecs :type "std::vector<std::pair<int,int> >")
+									    (parent :type QGraphicsItem*))
 									   nil
 									   :ctor
 									   ((m_dx dx)
 									    (m_dy dy)
 									    (m_nx nx)
-									    (m_ny ny)))
+									    (m_ny ny)
+									    )
+									   :parent-ctor ((QGraphicsItemGroup parent)))
 			   (with-compilation-unit
 			       (let ((dx :init m_dx)
 				     (dy :init m_dy)
 				     (nx :init m_nx)
-				     (ny :init m_ny))
+				     (ny :init m_ny)
+				     )
 				 (for-range (v vecs)
 					    (let ((i :init "v.first")
 						  (j :init "v.second")
@@ -200,7 +206,8 @@
 						 (dy :type int)
 						 (nx :type int)
 						 (ny :type int)
-						 (vecs :type "std::vector<std::pair<int,int> >"))
+						 (vecs :type "std::vector<std::pair<int,int> >")
+						 (parent :type QGraphicsItem*))
 						explicit))
 	       
 	       (access-specifier private)

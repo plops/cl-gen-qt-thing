@@ -1,8 +1,9 @@
 #include <CustomItemPixelsGroup.h>
 #include <QGraphicsRectItem>
 CustomItemPixelsGroup::CustomItemPixelsGroup(
-    int dx, int dy, int nx, int ny, std::vector<std::pair<int, int>> vecs)
-    : m_dx(dx), m_dy(dy), m_nx(nx), m_ny(ny) {
+    int dx, int dy, int nx, int ny, std::vector<std::pair<int, int>> vecs,
+    QGraphicsItem *parent)
+    : m_dx(dx), m_dy(dy), m_nx(nx), m_ny(ny), QGraphicsItemGroup(parent) {
   {
     auto dx = m_dx;
     auto dy = m_dy;
