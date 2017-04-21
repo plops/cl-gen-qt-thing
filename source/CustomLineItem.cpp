@@ -6,12 +6,12 @@ CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
     auto w = 17;
     auto h = w;
 
-    m_p1 = new CustomRectItem(
-        QRectF((line.p1() - ((5.e-1f) * QPointF(w, h))), QSizeF(w, h)), this,
-        this, true);
-    m_p2 = new CustomRectItem(
-        QRectF((line.p2() - ((5.e-1f) * QPointF(w, h))), QSizeF(w, h)), this,
-        this, false);
+    m_p1 = new CustomRectItem(QRectF(((-5.e-1f) * QPointF(w, h)), QSizeF(w, h)),
+                              this, this, true);
+    m_p1->setPos(line.p1());
+    m_p2 = new CustomRectItem(QRectF(((-5.e-1f) * QPointF(w, h)), QSizeF(w, h)),
+                              this, this, false);
+    m_p2->setPos(line.p2());
   }
 }
 

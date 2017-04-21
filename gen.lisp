@@ -64,17 +64,20 @@
 			   (let ((w :init 17)
 				 (h :init w))
 			     (setf m_p1 (new (funcall CustomRectItem
-						      (funcall QRectF (- (funcall line.p1) (* .5 (funcall QPointF w h)))
+						      ;; upper left corner and size
+						      (funcall QRectF (* -.5 (funcall QPointF w h))
 							       (funcall QSizeF w h))
 						      this
 						      this
 						      true)))
+			     (funcall m_p1->setPos (funcall line.p1))
 			     (setf m_p2 (new (funcall CustomRectItem
-						      (funcall QRectF (- (funcall line.p2) (* .5 (funcall QPointF w h)))
+						      (funcall QRectF (* -.5 (funcall QPointF w h))
 							       (funcall QSizeF w h))
 						      this
 						      this
-						      false)))))
+						      false)))
+			     (funcall m_p2->setPos (funcall line.p2))))
 		 (function ("CustomLineItem::itemChange" ((change :type GraphicsItemChange)
 							  (value :type "const QVariant&")) QVariant)
 			   (<< (funcall qDebug) (string "change customLine ") (funcall this->pos) (string " ") value)
