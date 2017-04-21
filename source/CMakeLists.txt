@@ -15,7 +15,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 #set(CMAKE_AUTOUIC ON)
 
 
-add_library(main_win CustomRectItem.cpp CustomLineItem.cpp)
+add_library(main_win CustomRectItem.cpp CustomLineItem.cpp CustomItemPixelsGroup.cpp)
 target_link_libraries(main_win Qt5::Widgets)
 
 

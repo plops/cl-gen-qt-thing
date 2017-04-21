@@ -68,7 +68,13 @@
 						      this
 						      this
 						      false)))
-			     (funcall m_p2->setPos (funcall line.p2))))
+			     (funcall m_p2->setPos (funcall line.p2)))
+			   (setf m_pixels (funcall CustomItemPixelsGroup
+						      (funcall QRectF (* -.5 (funcall QPointF w h))
+							       (funcall QSizeF w h))
+						      this
+						      this
+						      false)))
 		 (function ("CustomLineItem::itemChange" ((change :type GraphicsItemChange)
 							  (value :type "const QVariant&")) QVariant)
 			   (<< (funcall qDebug) (string "change customLine ") (funcall this->pos) (string " ") value)
@@ -90,7 +96,8 @@
 						 (value :type "const QVariant&")) QVariant))
 			  (access-specifier private)
 			  (decl ((m_p1 :type "CustomRectItem*" :init nullptr )
-				 (m_p2 :type "CustomRectItem*" :init nullptr )))))))
+				 (m_p2 :type "CustomRectItem*" :init nullptr )
+				 (m_pixels :type "CustomItemPixelsGroup*" :init nullptr )))))))
     (write-source "CustomLineItem" "h" header)
     (write-source "CustomLineItem" "cpp" code)
     )
@@ -146,6 +153,63 @@
 						  )))))))
     (write-source "CustomRectItem" "h" header)
     (write-source "CustomRectItem" "cpp" code))
+
+  (let ((code `(with-compilation-unit
+		   (include <CustomItemPixelsGroup.h>)
+		 (include <QGraphicsRectItem>)
+		 (function ("CustomItemPixelsGroup::CustomItemPixelsGroup" ((dx :type int)
+									    (dy :type int)
+									    (nx :type int)
+									    (ny :type int)
+									    (vecs :type "std::vector<std::pair<int,int> >"))
+									   nil
+									   :ctor
+									   ((m_dx dx)
+									    (m_dy dy)
+									    (m_nx nx)
+									    (m_ny ny)))
+			   (with-compilation-unit
+			       (let ((dx :init m_dx)
+				     (dy :init m_dy)
+				     (nx :init m_nx)
+				     (ny :init m_ny))
+				 (for-range (v vecs)
+					    (let ((i :init "v.first")
+						  (j :init "v.second")
+						  (eps :init -2))
+					      (let ((y1 :init (- (* dy j) eps))
+						    (x1 :init (- (* dx i) eps))
+						    (y2 :init (+ (* dy (+ 1 j)) eps))
+						    (x2 :init (+ (* dx (+ 1 i)) eps)))
+						(funcall "this->addToGroup" (new (funcall QGraphicsRectItem
+											  (funcall QRectF x1 y1 (- x2 x1) (- y2 y1))
+											  #+nil  (funcall QPen "Qt::red" 3 "Qt::SolidLine"
+													  "Qt::FlatCap"
+													  "Qt::MiterJoin"))))))))))
+		 ))
+	(header `(with-compilation-unit
+		     (raw "#pragma once")
+
+		   
+		   (include <QGraphicsItemGroup>)
+		   (include <vector>)
+		   (include <utility>)
+		   (class CustomItemPixelsGroup ("public QGraphicsItemGroup")
+	       (access-specifier public)
+	       (function (CustomItemPixelsGroup ((dx :type int)
+						 (dy :type int)
+						 (nx :type int)
+						 (ny :type int)
+						 (vecs :type "std::vector<std::pair<int,int> >"))
+						explicit))
+	       
+	       (access-specifier private)
+	       (decl ((m_dx :type "unsigned int")
+		      (m_dy :type "unsigned int")
+		      (m_nx :type "unsigned int")
+		      (m_ny :type "unsigned int")))))))
+    (write-source "CustomItemPixelsGroup" "h" header)
+    (write-source "CustomItemPixelsGroup" "cpp" code))
   
   (with-open-file (s *main-cpp-filename*
 		     :direction :output
@@ -177,43 +241,7 @@
 
 ")
 
-	(class CustomItemPixelsGroup ("public QGraphicsItemGroup")
-	       (access-specifier public)
-	       (function (CustomItemPixelsGroup ((dx :type int)
-						 (dy :type int)
-						 (nx :type int)
-						 (ny :type int)
-						 (vecs :type "std::vector<std::pair<int,int> >"))
-						explicit
-						:ctor
-						((m_dx dx)
-						 (m_dy dy)
-						 (m_nx nx)
-						 (m_ny ny)))
-			 (with-compilation-unit
-			     (let ((dx :init m_dx)
-				   (dy :init m_dy)
-				   (nx :init m_nx)
-				   (ny :init m_ny))
-			       (for-range (v vecs)
-					  (let ((i :init "v.first")
-						(j :init "v.second")
-						(eps :init -2))
-					    (let ((y1 :init (- (* dy j) eps))
-						  (x1 :init (- (* dx i) eps))
-						  (y2 :init (+ (* dy (+ 1 j)) eps))
-						  (x2 :init (+ (* dx (+ 1 i)) eps)))
-					      (funcall "this->addToGroup" (new (funcall QGraphicsRectItem
-											(funcall QRectF x1 y1 (- x2 x1) (- y2 y1))
-											#+nil  (funcall QPen "Qt::red" 3 "Qt::SolidLine"
-													"Qt::FlatCap"
-													"Qt::MiterJoin"))))))))))
-	       
-	       (access-specifier private)
-	       (decl ((m_dx :type "unsigned int")
-		      (m_dy :type "unsigned int")
-		      (m_nx :type "unsigned int")
-		      (m_ny :type "unsigned int"))))
+	
 
 
 	

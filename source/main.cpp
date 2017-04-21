@@ -10,44 +10,6 @@
 //! adjusted with two control points. The canvas also displays a grid of square
 //! pixels and highlights the pixels that are intersected by the line.
 
-class CustomItemPixelsGroup : public QGraphicsItemGroup {
-public:
-  explicit CustomItemPixelsGroup(int dx, int dy, int nx, int ny,
-                                 std::vector<std::pair<int, int>> vecs)
-      : m_dx(dx), m_dy(dy), m_nx(nx), m_ny(ny) {
-    {
-      auto dx = m_dx;
-      auto dy = m_dy;
-      auto nx = m_nx;
-      auto ny = m_ny;
-
-      for (auto v : vecs) {
-        {
-          auto i = v.first;
-          auto j = v.second;
-          auto eps = -2;
-
-          {
-            auto y1 = ((dy * j) - eps);
-            auto x1 = ((dx * i) - eps);
-            auto y2 = ((dy * (1 + j)) + eps);
-            auto x2 = ((dx * (1 + i)) + eps);
-
-            this->addToGroup(
-                new QGraphicsRectItem(QRectF(x1, y1, (x2 - x1), (y2 - y1))));
-          }
-        }
-      }
-    }
-  }
-
-private:
-  unsigned int m_dx;
-  unsigned int m_dy;
-  unsigned int m_nx;
-  unsigned int m_ny;
-};
-
 class CustomItemGridGroup : public QGraphicsItemGroup {
 public:
   explicit CustomItemGridGroup(int dx, int dy, int nx, int ny)
