@@ -54,19 +54,22 @@ private:
 class CustomLineItem : public QGraphicsLineItem {
 public:
   explicit CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
-    this->setFlag(QGraphicsItem::ItemSendsScenePositionChanges);
-    this->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
-  }
+    {
+      auto w = 17;
+      auto h = w;
 
-  QVariant itemChange(GraphicsItemChange change, const QVariant &value) {
-    (qDebug() << "change customLine " << this->pos() << " " << value);
-    if (((ItemPositionChange == change) && scene())) {
-      // value is the same as pos();
-      (qDebug() << "change pos customLine " << this->pos() << " " << value);
+      m_p1 = new CustomRectItem(
+          QRectF((line.p1() - ((5.e-1f) * QPointF(w, h))), QSizeF(w, h)), this,
+          this, true);
+      m_p2 = new CustomRectItem(
+          QRectF((line.p2() - ((5.e-1f) * QPointF(w, h))), QSizeF(w, h)), this,
+          this, false);
     }
-
-    return QGraphicsItem::itemChange(change, value);
   }
+
+private:
+  CustomRectItem *m_p1 = nullptr;
+  CustomRectItem *m_p2 = nullptr;
 };
 
 //! Movable square. Two of these are use to define a line.
@@ -75,60 +78,23 @@ public:
 //! first_point_p.
 class CustomRectItem : public QGraphicsRectItem {
 public:
-  explicit CustomRectItem(const QRectF &rect) : QGraphicsRectItem(rect) {
+  explicit CustomRectItem(const QRectF &rect, QGraphicsItem *parent,
+                          CustomLineItem *line, bool first_point_p)
+      : m_line(line), m_first_point_p(first_point_p),
+        QGraphicsRectItem(rect, parent) {
     this->setFlag(QGraphicsItem::ItemIsMovable);
     this->setFlag(QGraphicsItem::ItemSendsScenePositionChanges);
   }
 
-  //! Attach a line to the control point.
-
-  //! For each line this should be called twice for two different instances of
-  //! CustomRectItem and different second parameter. Call addLine before adding
-  //! the CustomRectItem to the scene. This ensures that the line coordinates
-  //! are in a consistent state.
-  void addLine(CustomLineItem *line, bool is_first_point_p) {
-    m_line = line;
-    m_first_point_p = is_first_point_p;
-  }
-
-  //! Display a label below the control point.
-
-  //! Call addLabel before setPos. This ensures that the point coordinates are
-  //! displayed correctly.
-  void addLabel() {
-    m_text = new QGraphicsTextItem();
-    m_text->setPos(this->pos());
-    m_text->setPlainText("Barev");
-    this->scene()->addItem(m_text);
-  }
-
-protected:
-  //! Update line parameters when the control point is moved with the mouse.
+private:
   QVariant itemChange(GraphicsItemChange change, const QVariant &value) {
     if (((ItemPositionChange == change) && scene())) {
-      // value is the same as pos();
       moveLineToCenter(value.toPointF());
-      if (m_text) {
-        {
-          QString s;
-          QTextStream st(&s);
-
-          st.setFieldWidth(4);
-          st.setFieldAlignment(QTextStream::AlignCenter);
-          st.setPadChar('_');
-          (st << value.toPointF().x() << value.toPointF().y());
-          m_text->setPlainText(s);
-          moveTextToCenter(value.toPointF());
-        }
-      }
     }
 
     return QGraphicsItem::itemChange(change, value);
   }
 
-private:
-  //! Update one of the two points of the line. The bool m_first_point_p chooses
-  //! the point.
   void moveLineToCenter(QPointF newPos) {
     {
       auto p1 = (m_first_point_p) ? (newPos) : (m_line->line().p1());
@@ -138,16 +104,7 @@ private:
     }
   }
 
-  //! Update the text label position.
-  void moveTextToCenter(QPointF newPos) {
-    if (m_text) {
-      m_text->setPos(newPos);
-    }
-  }
-
-  //! Update the list of highlighted pixels. Call this aftes moveLineToCenter.
   CustomLineItem *m_line = nullptr;
-  QGraphicsTextItem *m_text = nullptr;
   bool m_first_point_p = false;
 };
 
@@ -217,34 +174,17 @@ int main(int argc, char **argv) {
         auto w = (1.7e+1f);
         auto c = (w / (-2.e+0f));
         auto grid = new CustomItemGridGroup(20, 20, 10, 10);
-        auto handle_center = new CustomRectItem(QRectF(c, c, w, w));
-        auto handle_periph = new CustomRectItem(QRectF(c, c, w, w));
 
         {
           auto line = new CustomLineItem(QLineF(40, 40, 80, 80));
 
           scene->addItem(line);
           // initiate the line to some random ;
-          handle_center->addLine(line, true);
-          handle_periph->addLine(line, false);
         }
 
         scene->addItem(grid);
-        scene->addItem(handle_center);
-        scene->addItem(handle_periph);
-        handle_center->addLabel();
-        handle_periph->addLabel();
         // change position of handles now, so that the line is redrawn by
         // CustomRect::itemChange;
-        handle_center->setPos(150, 150);
-        handle_periph->setPos(130, 280);
-        {
-          auto tr = QTransform();
-
-          tr.rotate(45, Qt::ZAxis);
-          handle_center->setTransform(tr);
-        }
-
         scene->addText("hello");
       }
     }
