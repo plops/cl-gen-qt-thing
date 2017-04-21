@@ -51,6 +51,21 @@ private:
   unsigned int m_ny;
 };
 
+class CustomLineItem : public QGraphicsLineItem {
+public:
+  explicit CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
+    this->setFlag(QGraphicsItem::ItemSendsScenePositionChanges);
+  }
+
+  QVariant itemChange(GraphicsItemChange change, const QVariant &value) {
+    if (((ItemPositionChange == change) && scene())) {
+      // value is the same as pos();
+    }
+
+    return QGraphicsItem::itemChange(change, value);
+  }
+};
+
 //! Movable square. Two of these are use to define a line.
 
 //! The two control points are distinguished by the boolean member
@@ -68,7 +83,7 @@ public:
   //! CustomRectItem and different second parameter. Call addLine before adding
   //! the CustomRectItem to the scene. This ensures that the line coordinates
   //! are in a consistent state.
-  void addLine(QGraphicsLineItem *line, bool is_first_point_p) {
+  void addLine(CustomLineItem *line, bool is_first_point_p) {
     m_line = line;
     m_first_point_p = is_first_point_p;
   }
@@ -90,7 +105,6 @@ protected:
     if (((ItemPositionChange == change) && scene())) {
       // value is the same as pos();
       moveLineToCenter(value.toPointF());
-      updatePixels();
       if (m_text) {
         {
           QString s;
@@ -129,26 +143,8 @@ private:
   }
 
   //! Update the list of highlighted pixels. Call this aftes moveLineToCenter.
-  void updatePixels() {
-    if (m_line) {
-      {
-        auto p1 = m_line->line().p1();
-        auto p2 = m_line->line().p2();
-        std::vector<std::pair<int, int>> pos = {{1, 1}, {2, 2}, {2, 3}};
-
-        if (m_pixels) {
-          this->scene()->removeItem(m_pixels);
-        }
-
-        m_pixels = new CustomItemPixelsGroup(20, 20, 10, 10, pos);
-        this->scene()->addItem(m_pixels);
-      }
-    }
-  }
-
-  QGraphicsLineItem *m_line = nullptr;
+  CustomLineItem *m_line = nullptr;
   QGraphicsTextItem *m_text = nullptr;
-  CustomItemPixelsGroup *m_pixels = nullptr;
   bool m_first_point_p = false;
 };
 
@@ -222,8 +218,9 @@ int main(int argc, char **argv) {
         auto handle_periph = new CustomRectItem(QRectF(c, c, w, w));
 
         {
-          auto line = scene->addLine(QLineF(40, 40, 80, 80));
+          auto line = new CustomLineItem(QLineF(40, 40, 80, 80));
 
+          scene->addItem(line);
           // initiate the line to some random ;
           handle_center->addLine(line, true);
           handle_periph->addLine(line, false);
