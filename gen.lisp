@@ -47,10 +47,50 @@
 	(raw "//! This program displays a line on a canvas. The parameters of the line can be adjusted with two control points. The canvas also displays a grid of square pixels and highlights the pixels that are intersected by the line.
 
 ")
+
+
+	(class CustomItemPixelsGroup ("public QGraphicsItemGroup")
+	       (access-specifier public)
+	       (function (CustomItemPixelsGroup ((dx :type int)
+						 (dy :type int)
+						 (nx :type int)
+						 (ny :type int)
+						 (vecs :type "std::vector<std::pair<int,int> >"))
+						explicit
+						:ctor
+						((m_dx dx)
+						 (m_dy dy)
+						 (m_nx nx)
+						 (m_ny ny)))
+			 (with-compilation-unit
+			     (let ((dx :init m_dx)
+				   (dy :init m_dy)
+				   (nx :init m_nx)
+				   (ny :init m_ny))
+			       (for-range (v vecs)
+				(let ((i :init "v.first")
+				      (j :init "v.second")
+				      (eps :init -2))
+				  (let ((y1 :init (- (* dy j) eps))
+					(x1 :init (- (* dx i) eps))
+					(y2 :init (+ (* dy (+ 1 j)) eps))
+					(x2 :init (+ (* dx (+ 1 i)) eps)))
+				    (funcall "this->addToGroup" (new (funcall QGraphicsRectItem
+									      (funcall QRectF x1 y1 (- x2 x1) (- y2 y1))
+									      #+nil  (funcall QPen "Qt::red" 3 "Qt::SolidLine"
+											      "Qt::FlatCap"
+											      "Qt::MiterJoin"))))))))))
+	     
+	       (access-specifier private)
+	       (decl ((m_dx :type "unsigned int")
+		      (m_dy :type "unsigned int")
+		      (m_nx :type "unsigned int")
+		      (m_ny :type "unsigned int"))))
+	
 	(raw "//! Movable square. Two of these are use to define a line.
 
 //! The two control points are distinguished by the boolean member first_point_p.")
-
+	
 	
 	(class CustomRectItem ("public QGraphicsRectItem")
 	       (access-specifier public)
@@ -66,17 +106,17 @@
 //! For each line this should be called twice for two different instances of CustomRectItem and different second parameter. Call addLine before adding the CustomRectItem to the scene. This ensures that the line coordinates are in a consistent state.")
 	       (function (addLine ((line :type QGraphicsLineItem*)
 				   (is_first_point_p :type bool)) void)
-			 (setf this->line line
-			       first_point_p is_first_point_p))
+			 (setf m_line line
+			       m_first_point_p is_first_point_p))
 	       (raw "//! Display a label below the control point. 
 
 //! Call addLabel before setPos. This ensures that the point coordinates are displayed correctly.")
 	       (function (addLabel ()
 				   void)
-			 (setf text (new (funcall QGraphicsTextItem)))
-			 (funcall text->setPos (funcall this->pos))
-			 (funcall text->setPlainText (string "Barev"))
-			 (funcall "this->scene()->addItem" text))
+			 (setf m_text (new (funcall QGraphicsTextItem)))
+			 (funcall m_text->setPos (funcall this->pos))
+			 (funcall m_text->setPlainText (string "Barev"))
+			 (funcall "this->scene()->addItem" m_text))
 	       (access-specifier protected)
 	       (raw "//! Update line parameters when the control point is moved with the mouse.")
 	       (function (itemChange ((change :type GraphicsItemChange)
@@ -113,7 +153,8 @@
 							  "Qt::FlatCap"
 							  "Qt::MiterJoin")))))))
 			      (funcall moveLineToCenter (funcall value.toPointF))
-			      (if text
+			      (funcall updatePixels)
+			      (if m_text
 				  (let ((s :type QString)
 					(st :type QTextStream :ctor &s))
 				    (funcall st.setFieldWidth 4)
@@ -122,25 +163,40 @@
 				    (<< st (funcall "value.toPointF().x")
 					(funcall "value.toPointF().y"))
 				    
-				    (funcall text->setPlainText s)
+				    (funcall m_text->setPlainText s)
 				    (funcall moveTextToCenter (funcall value.toPointF))))
 			      
 			      ))
 			 (return (funcall "QGraphicsItem::itemChange" change value)))
 	       	       
 	       (access-specifier private)
-	       (raw "//! Update one of the two points of the line. The bool first_point_p chooses the point.")
+	       (raw "//! Update one of the two points of the line. The bool m_first_point_p chooses the point.")
 	       (function (moveLineToCenter ((newPos :type QPointF)) void)
-			 (let ((p1 :init (? first_point_p newPos "line->line().p1()"))
-			       (p2 :init (? first_point_p "line->line().p2()" newPos)))
-			   (funcall line->setLine (funcall QLineF p1 p2))))
+			 (let ((p1 :init (? m_first_point_p newPos "m_line->line().p1()"))
+			       (p2 :init (? m_first_point_p "m_line->line().p2()" newPos)))
+			   (funcall m_line->setLine (funcall QLineF p1 p2))))
 	       (raw "//! Update the text label position.")
 	       (function (moveTextToCenter ((newPos :type QPointF)) void)
-			 (if text
-			     (funcall text->setPos newPos)))
-	       (decl ((line :type "QGraphicsLineItem*" :init nullptr)
-		      (text :type "QGraphicsTextItem*" :init nullptr)
-		      (first_point_p :type bool :init false))))
+			 (if m_text
+			     (funcall m_text->setPos newPos)))
+	       (raw "//! Update the list of highlighted pixels. Call this aftes moveLineToCenter.")
+	       (function (updatePixels () void)
+			 (if m_line
+			     (statements
+			      (let ((p1 :init "m_line->line().p1()")
+				    (p2 :init "m_line->line().p2()")
+				    (pos :type "std::vector<std::pair<int,int> >" :init (list (list 1 1)
+											      (list 2 2)
+											      (list 2 3))))
+				(if m_pixels
+				    (statements
+				     (funcall "this->scene()->removeItem" m_pixels)))
+				(setf m_pixels (new (funcall CustomItemPixelsGroup 20 20 10 10 pos)))
+				(funcall "this->scene()->addItem" m_pixels)))))
+	       (decl ((m_line :type "QGraphicsLineItem*" :init nullptr)
+		      (m_text :type "QGraphicsTextItem*" :init nullptr)
+		      (m_pixels :type "CustomItemPixelsGroup*" :init nullptr)
+		      (m_first_point_p :type bool :init false))))
 	
 
 	(class CustomItemGridGroup ("public QGraphicsItemGroup")
@@ -183,43 +239,7 @@
 		      (m_nx :type "unsigned int")
 		      (m_ny :type "unsigned int"))))
 	
-	(class CustomItemPixelsGroup ("public QGraphicsItemGroup")
-	       (access-specifier public)
-	       (function (CustomItemPixelsGroup ((dx :type int)
-						 (dy :type int)
-						 (nx :type int)
-						 (ny :type int)
-						 (vecs :type "std::vector<std::pair<int,int> >"))
-						explicit
-						:ctor
-						((m_dx dx)
-						 (m_dy dy)
-						 (m_nx nx)
-						 (m_ny ny)))
-			 (with-compilation-unit
-			     (let ((dx :init m_dx)
-				   (dy :init m_dy)
-				   (nx :init m_nx)
-				   (ny :init m_ny))
-			       (for-range (v vecs)
-				(let ((i :init "v.first")
-				      (j :init "v.second")
-				      (eps :init -2))
-				  (let ((y1 :init (- (* dy j) eps))
-					(x1 :init (- (* dx i) eps))
-					(y2 :init (+ (* dy (+ 1 j)) eps))
-					(x2 :init (+ (* dx (+ 1 i)) eps)))
-				    (funcall "this->addToGroup" (new (funcall QGraphicsRectItem
-									      (funcall QRectF x1 y1 (- x2 x1) (- y2 y1))
-									      #+nil  (funcall QPen "Qt::red" 3 "Qt::SolidLine"
-											      "Qt::FlatCap"
-											      "Qt::MiterJoin"))))))))))
-	     
-	       (access-specifier private)
-	       (decl ((m_dx :type "unsigned int")
-		      (m_dy :type "unsigned int")
-		      (m_nx :type "unsigned int")
-		      (m_ny :type "unsigned int"))))
+	
 	
 	(function (main ((argc :type int)
 			 (argv :type char**))
@@ -275,10 +295,10 @@
 			(let ((w :init 17.0)
 			      (c :init (/ w -2.0))
 			      (grid :init (new (funcall CustomItemGridGroup 20 20 10 10)))
-			      (pos :type "std::vector<std::pair<int,int> >" :init (list (list 1 1)
+			      #+nil (pos :type "std::vector<std::pair<int,int> >" :init (list (list 1 1)
 											(list 2 2)
 											(list 2 3)))
-			      (pixels :init (new (funcall CustomItemPixelsGroup 20 20 10 10 pos)))
+			      ;(pixels :init (new (funcall CustomItemPixelsGroup 20 20 10 10 pos)))
 			      (handle_center  :init (new (funcall CustomRectItem (funcall QRectF c c w w))))
 			      (handle_periph :init (new (funcall CustomRectItem (funcall QRectF c c w w)))))
 			  
@@ -291,7 +311,7 @@
 
 			  
 			  (funcall scene->addItem grid)
-			  (funcall scene->addItem pixels)
+			  ;(funcall scene->addItem pixels)
 			  (funcall scene->addItem handle_center)
 			  (funcall scene->addItem handle_periph)
 			  

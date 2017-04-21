@@ -13,6 +13,44 @@
 //! adjusted with two control points. The canvas also displays a grid of square
 //! pixels and highlights the pixels that are intersected by the line.
 
+class CustomItemPixelsGroup : public QGraphicsItemGroup {
+public:
+  explicit CustomItemPixelsGroup(int dx, int dy, int nx, int ny,
+                                 std::vector<std::pair<int, int>> vecs)
+      : m_dx(dx), m_dy(dy), m_nx(nx), m_ny(ny) {
+    {
+      auto dx = m_dx;
+      auto dy = m_dy;
+      auto nx = m_nx;
+      auto ny = m_ny;
+
+      for (auto v : vecs) {
+        {
+          auto i = v.first;
+          auto j = v.second;
+          auto eps = -2;
+
+          {
+            auto y1 = ((dy * j) - eps);
+            auto x1 = ((dx * i) - eps);
+            auto y2 = ((dy * (1 + j)) + eps);
+            auto x2 = ((dx * (1 + i)) + eps);
+
+            this->addToGroup(
+                new QGraphicsRectItem(QRectF(x1, y1, (x2 - x1), (y2 - y1))));
+          }
+        }
+      }
+    }
+  }
+
+private:
+  unsigned int m_dx;
+  unsigned int m_dy;
+  unsigned int m_nx;
+  unsigned int m_ny;
+};
+
 //! Movable square. Two of these are use to define a line.
 
 //! The two control points are distinguished by the boolean member
@@ -31,8 +69,8 @@ public:
   //! the CustomRectItem to the scene. This ensures that the line coordinates
   //! are in a consistent state.
   void addLine(QGraphicsLineItem *line, bool is_first_point_p) {
-    this->line = line;
-    first_point_p = is_first_point_p;
+    m_line = line;
+    m_first_point_p = is_first_point_p;
   }
 
   //! Display a label below the control point.
@@ -40,10 +78,10 @@ public:
   //! Call addLabel before setPos. This ensures that the point coordinates are
   //! displayed correctly.
   void addLabel() {
-    text = new QGraphicsTextItem();
-    text->setPos(this->pos());
-    text->setPlainText("Barev");
-    this->scene()->addItem(text);
+    m_text = new QGraphicsTextItem();
+    m_text->setPos(this->pos());
+    m_text->setPlainText("Barev");
+    this->scene()->addItem(m_text);
   }
 
 protected:
@@ -52,7 +90,8 @@ protected:
     if (((ItemPositionChange == change) && scene())) {
       // value is the same as pos();
       moveLineToCenter(value.toPointF());
-      if (text) {
+      updatePixels();
+      if (m_text) {
         {
           QString s;
           QTextStream st(&s);
@@ -61,7 +100,7 @@ protected:
           st.setFieldAlignment(QTextStream::AlignCenter);
           st.setPadChar('_');
           (st << value.toPointF().x() << value.toPointF().y());
-          text->setPlainText(s);
+          m_text->setPlainText(s);
           moveTextToCenter(value.toPointF());
         }
       }
@@ -71,27 +110,46 @@ protected:
   }
 
 private:
-  //! Update one of the two points of the line. The bool first_point_p chooses
+  //! Update one of the two points of the line. The bool m_first_point_p chooses
   //! the point.
   void moveLineToCenter(QPointF newPos) {
     {
-      auto p1 = (first_point_p) ? (newPos) : (line->line().p1());
-      auto p2 = (first_point_p) ? (line->line().p2()) : (newPos);
+      auto p1 = (m_first_point_p) ? (newPos) : (m_line->line().p1());
+      auto p2 = (m_first_point_p) ? (m_line->line().p2()) : (newPos);
 
-      line->setLine(QLineF(p1, p2));
+      m_line->setLine(QLineF(p1, p2));
     }
   }
 
   //! Update the text label position.
   void moveTextToCenter(QPointF newPos) {
-    if (text) {
-      text->setPos(newPos);
+    if (m_text) {
+      m_text->setPos(newPos);
     }
   }
 
-  QGraphicsLineItem *line = nullptr;
-  QGraphicsTextItem *text = nullptr;
-  bool first_point_p = false;
+  //! Update the list of highlighted pixels. Call this aftes moveLineToCenter.
+  void updatePixels() {
+    if (m_line) {
+      {
+        auto p1 = m_line->line().p1();
+        auto p2 = m_line->line().p2();
+        std::vector<std::pair<int, int>> pos = {{1, 1}, {2, 2}, {2, 3}};
+
+        if (m_pixels) {
+          this->scene()->removeItem(m_pixels);
+        }
+
+        m_pixels = new CustomItemPixelsGroup(20, 20, 10, 10, pos);
+        this->scene()->addItem(m_pixels);
+      }
+    }
+  }
+
+  QGraphicsLineItem *m_line = nullptr;
+  QGraphicsTextItem *m_text = nullptr;
+  CustomItemPixelsGroup *m_pixels = nullptr;
+  bool m_first_point_p = false;
 };
 
 class CustomItemGridGroup : public QGraphicsItemGroup {
@@ -136,44 +194,6 @@ private:
   unsigned int m_ny;
 };
 
-class CustomItemPixelsGroup : public QGraphicsItemGroup {
-public:
-  explicit CustomItemPixelsGroup(int dx, int dy, int nx, int ny,
-                                 std::vector<std::pair<int, int>> vecs)
-      : m_dx(dx), m_dy(dy), m_nx(nx), m_ny(ny) {
-    {
-      auto dx = m_dx;
-      auto dy = m_dy;
-      auto nx = m_nx;
-      auto ny = m_ny;
-
-      for (auto v : vecs) {
-        {
-          auto i = v.first;
-          auto j = v.second;
-          auto eps = -2;
-
-          {
-            auto y1 = ((dy * j) - eps);
-            auto x1 = ((dx * i) - eps);
-            auto y2 = ((dy * (1 + j)) + eps);
-            auto x2 = ((dx * (1 + i)) + eps);
-
-            this->addToGroup(
-                new QGraphicsRectItem(QRectF(x1, y1, (x2 - x1), (y2 - y1))));
-          }
-        }
-      }
-    }
-  }
-
-private:
-  unsigned int m_dx;
-  unsigned int m_dy;
-  unsigned int m_nx;
-  unsigned int m_ny;
-};
-
 int main(int argc, char **argv) {
   if ((0 == argc)) {
     return 0;
@@ -198,8 +218,6 @@ int main(int argc, char **argv) {
         auto w = (1.7e+1f);
         auto c = (w / (-2.e+0f));
         auto grid = new CustomItemGridGroup(20, 20, 10, 10);
-        std::vector<std::pair<int, int>> pos = {{1, 1}, {2, 2}, {2, 3}};
-        auto pixels = new CustomItemPixelsGroup(20, 20, 10, 10, pos);
         auto handle_center = new CustomRectItem(QRectF(c, c, w, w));
         auto handle_periph = new CustomRectItem(QRectF(c, c, w, w));
 
@@ -212,7 +230,6 @@ int main(int argc, char **argv) {
         }
 
         scene->addItem(grid);
-        scene->addItem(pixels);
         scene->addItem(handle_center);
         scene->addItem(handle_periph);
         handle_center->addLabel();
