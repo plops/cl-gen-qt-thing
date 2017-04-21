@@ -78,13 +78,17 @@
 			     (setf m_pixels (new (funcall CustomItemPixelsGroup 20 20 10 10 pos this)))))
 		 (function ("CustomLineItem::itemChange" ((change :type GraphicsItemChange)
 							  (value :type "const QVariant&")) QVariant)
-			   (<< (funcall qDebug) (string "change customLine ") (funcall this->pos) (string " ") value)
+			   ;(<< (funcall qDebug) (string "change customLine ") (funcall this->pos) (string " ") value)
 			   (if (&& (== ItemPositionChange change)
 				   (funcall scene))
 			       (statements
 				(raw "// value is the same as pos()")
 				(<< (funcall qDebug) (string "change pos customLine ") (funcall this->pos) (string " ") value)))
-			   (return (funcall "QGraphicsItem::itemChange" change value)))))
+			   (return (funcall "QGraphicsItem::itemChange" change value)))
+		 (function ("CustomLineItem::getPixels" () CustomItemPixelsGroup*)
+			   (return m_pixels))
+		 (function ("CustomLineItem::setPixels" ((vecs :type "std::vector<std::pair<int,int> >")) void)
+			   (setf m_pixels (new (funcall CustomItemPixelsGroup 20 20 10 10 vecs this))))))
 	(header `(with-compilation-unit
 		     (raw "#pragma once")
 		   (include <QtCore>)
@@ -96,6 +100,8 @@
 			  (function (CustomLineItem ((line :type "const QLineF&"))  explicit))
 			  (function (itemChange ((change :type GraphicsItemChange)
 						 (value :type "const QVariant&")) QVariant))
+			  (function (getPixels () CustomItemPixelsGroup*))
+			  (function (setPixels ((vecs :type "std::vector<std::pair<int,int> >")) void))
 			  (access-specifier private)
 			  (decl ((m_p1 :type "CustomRectItem*" :init nullptr )
 				 (m_p2 :type "CustomRectItem*" :init nullptr )
@@ -106,7 +112,7 @@
 
   (let ((code `(with-compilation-unit
 		   (include <CustomRectItem.h>)
-
+		 (include <QGraphicsScene>)
 		 (function ("CustomRectItem::CustomRectItem" ((rect :type "const QRectF&")
 							      (parent :type QGraphicsItem*)
 							      (line :type CustomLineItem*)
@@ -124,7 +130,12 @@
 			   (if (&& (== ItemPositionChange change)
 				   (funcall scene))
 			       (statements
-				(funcall moveLineToCenter (funcall value.toPointF))))
+				(funcall moveLineToCenter (funcall value.toPointF))
+				(funcall "m_line->scene()->removeItem" (funcall m_line->getPixels))
+				(let ( (pos :type "std::vector<std::pair<int,int> >" :init (list (list 1 3)
+											      (list 4 5)
+											      (list 9 4))))
+				 (funcall m_line->setPixels pos))))
 			   (return (funcall "QGraphicsItem::itemChange" change value)))
 		 (function ("CustomRectItem::moveLineToCenter" ((newPos :type QPointF)) void)
 			   (let ((p1 :init (? m_first_point_p newPos "m_line->line().p1()"))
