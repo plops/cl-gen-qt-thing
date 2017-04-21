@@ -1,5 +1,7 @@
 #include <CustomRectItem.h>
 #include <QGraphicsScene>
+#include <utility>
+#include <vector>
 CustomRectItem::CustomRectItem(const QRectF &rect, QGraphicsItem *parent,
                                CustomLineItem *line, bool first_point_p)
     : m_line(line), m_first_point_p(first_point_p),
@@ -14,7 +16,17 @@ QVariant CustomRectItem::itemChange(GraphicsItemChange change,
     moveLineToCenter(value.toPointF());
     m_line->scene()->removeItem(m_line->getPixels());
     {
-      std::vector<std::pair<int, int>> pos = {{1, 3}, {4, 5}, {9, 4}};
+      std::vector<std::pair<int, int>> pos;
+
+      for (unsigned int i = 0; (i < 10); i += 1) {
+        {
+          auto line = m_line->line();
+          auto p1 = line.p1();
+          auto p2 = line.p2();
+
+          pos.push_back(std::make_pair(i, i));
+        }
+      }
 
       m_line->setPixels(pos);
     }
