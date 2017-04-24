@@ -23,10 +23,10 @@ public:
 
       for (unsigned int i = 0; (i < ny); i += 1) {
         {
-          auto x1 = (dx * (1 + i));
-          auto y1 = (dy * 1);
+          auto x1 = (dx * i);
+          auto y1 = (dy * 0);
           auto x2 = x1;
-          auto y2 = (dy * ny);
+          auto y2 = (dy * (ny - 1));
 
           this->addToGroup(new QGraphicsLineItem(QLineF(x1, y1, x2, y2)));
         }
@@ -34,10 +34,10 @@ public:
 
       for (unsigned int i = 0; (i < nx); i += 1) {
         {
-          auto y1 = (dy * (1 + i));
-          auto x1 = (dx * 1);
+          auto y1 = (dy * i);
+          auto x1 = (dx * 0);
           auto y2 = y1;
-          auto x2 = (dx * nx);
+          auto x2 = (dx * (nx - 1));
 
           this->addToGroup(new QGraphicsLineItem(QLineF(x1, y1, x2, y2)));
         }
@@ -78,13 +78,6 @@ int main(int argc, char **argv) {
         auto grid = new CustomItemGridGroup(20, 20, 10, 10);
 
         {
-          auto line = new CustomLineItem(QLineF(40, 40, 80, 80));
-
-          scene->addItem(line);
-          // initiate the line to some random ;
-        }
-
-        {
           QGraphicsPixmapItem *pixmapItem(new QGraphicsPixmapItem());
 
           scene->addItem(pixmapItem);
@@ -94,6 +87,13 @@ int main(int argc, char **argv) {
             pm->fill(Qt::green);
             pixmapItem->setPixmap(*pm);
           }
+        }
+
+        {
+          auto line = new CustomLineItem(QLineF(40, 40, 80, 80));
+
+          scene->addItem(line);
+          // initiate the line to some random ;
         }
 
         scene->addItem(grid);

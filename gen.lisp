@@ -178,11 +178,11 @@
 				    (dotimes (i (- nx 1))
 				      (if (<
 					   (funcall fabsf (funcall lineDistance line (funcall QPointF
-										(* dx (+ i 1.5s0))
-										(* dy (+ j 1.5s0)))))
+										(* dx (+ i .5s0))
+										(* dy (+ j .5s0)))))
 					   (* .5s0 (funcall sqrtf (* dx dy))))
 					  (statements
-					   (funcall pos.push_back (funcall "std::make_pair" (+ i 1) (+ j 1)))))))
+					   (funcall pos.push_back (funcall "std::make_pair" i j))))))
 				  (funcall m_line->setPixels pos))))
 			   (return (funcall "QGraphicsItem::itemChange" change value)))
 		 (function ("CustomRectItem::moveLineToCenter" ((newPos :type QPointF)) void)
@@ -334,16 +334,16 @@
 				 (nx :init m_nx)
 				 (ny :init m_ny))
 			     (dotimes (i ny)
-			       (let ((x1 :init (* dx (+ 1 i)))
-				     (y1 :init (* dy 1))
+			       (let ((x1 :init (* dx i))
+				     (y1 :init (* dy 0))
 				     (x2 :init x1)
-				     (y2 :init (* dy ny)))
+				     (y2 :init (* dy (- ny 1))))
 				 (funcall this->addToGroup (new (funcall QGraphicsLineItem (funcall QLineF x1 y1 x2 y2))))))
 			     (dotimes (i nx)
-			       (let ((y1 :init (* dy (+ 1 i)))
-				     (x1 :init (* dx 1))
+			       (let ((y1 :init (* dy i))
+				     (x1 :init (* dx 0))
 				     (y2 :init y1)
-				     (x2 :init (* dx nx)))
+				     (x2 :init (* dx (- nx 1))))
 				 (funcall this->addToGroup (new (funcall QGraphicsLineItem (funcall QLineF x1 y1 x2 y2)))))))))
 	       
 	       (access-specifier private)
@@ -416,7 +416,11 @@
 					;(handle_periph :init (new (funcall CustomRectItem (funcall QRectF c c w w))))
 			      )
 			  
-			  
+			  (let ((pixmapItem :type QGraphicsPixmapItem* :ctor (new (funcall QGraphicsPixmapItem))))
+			    (funcall scene->addItem pixmapItem)
+			    (let ((pm :ctor (new (funcall QPixmap 256 256))))
+			      (funcall pm->fill "Qt::green")
+			      (funcall pixmapItem->setPixmap *pm)))
 			  
 			  (let ((line :init (new (funcall CustomLineItem (funcall QLineF 40 40 80 80)))))
 			    (funcall scene->addItem line)
@@ -425,11 +429,7 @@
 					;(funcall handle_periph->addLine line false)
 			    )
 
-			  (let ((pixmapItem :type QGraphicsPixmapItem* :ctor (new (funcall QGraphicsPixmapItem))))
-			    (funcall scene->addItem pixmapItem)
-			    (let ((pm :ctor (new (funcall QPixmap 256 256))))
-			      (funcall pm->fill "Qt::green")
-			      (funcall pixmapItem->setPixmap *pm)))
+			  
 
 			  
 			  (funcall scene->addItem grid)

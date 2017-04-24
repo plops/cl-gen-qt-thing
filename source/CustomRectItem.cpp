@@ -41,10 +41,10 @@ QVariant CustomRectItem::itemChange(GraphicsItemChange change,
 
       for (unsigned int j = 0; (j < (ny - 1)); j += 1) {
         for (unsigned int i = 0; (i < (nx - 1)); i += 1) {
-          if ((fabsf(lineDistance(line, QPointF((dx * (i + (1.5e+0f))),
-                                                (dy * (j + (1.5e+0f)))))) <
+          if ((fabsf(lineDistance(line, QPointF((dx * (i + (5.e-1f))),
+                                                (dy * (j + (5.e-1f)))))) <
                ((5.e-1f) * sqrtf((dx * dy))))) {
-            pos.push_back(std::make_pair((i + 1), (j + 1)));
+            pos.push_back(std::make_pair(i, j));
           }
         }
       }
