@@ -13,4 +13,6 @@ private:
   CustomRectItem *m_p1 = nullptr;
   CustomRectItem *m_p2 = nullptr;
   CustomItemPixelsGroup *m_pixels = nullptr;
+  QGraphicsPixmapItem *m_pixmap_item = nullptr;
+  QPixmap *m_pixmap = nullptr;
 };

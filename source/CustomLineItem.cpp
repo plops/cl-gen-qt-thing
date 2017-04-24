@@ -2,7 +2,15 @@
 #include <CustomRectItem.h>
 #include <QDebug>
 #include <QGraphicsScene>
+enum Coord { DX = 20, DY = 20, NX = 30, NY = 30 };
+
 CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
+  m_pixmap_item = new QGraphicsPixmapItem(this);
+  m_pixmap = new QPixmap((DX * (NX - 1)), (DY * (NY - 1)));
+
+  m_pixmap->fill(Qt::green);
+  m_pixmap_item->setPixmap(*m_pixmap);
+
   {
     auto w = 17;
     auto h = w;
@@ -18,7 +26,7 @@ CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
   {
     std::vector<std::pair<int, int>> pos = {{1, 1}, {2, 2}, {2, 3}};
 
-    m_pixels = new CustomItemPixelsGroup(20, 20, 10, 10, pos, this);
+    m_pixels = new CustomItemPixelsGroup(DX, DY, NX, NX, pos, this);
   }
 }
 

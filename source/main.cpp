@@ -78,18 +78,6 @@ int main(int argc, char **argv) {
         auto grid = new CustomItemGridGroup(20, 20, 10, 10);
 
         {
-          QGraphicsPixmapItem *pixmapItem(new QGraphicsPixmapItem());
-
-          scene->addItem(pixmapItem);
-          {
-            auto pm(new QPixmap(256, 256));
-
-            pm->fill(Qt::green);
-            pixmapItem->setPixmap(*pm);
-          }
-        }
-
-        {
           auto line = new CustomLineItem(QLineF(40, 40, 80, 80));
 
           scene->addItem(line);

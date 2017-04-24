@@ -63,11 +63,22 @@
 		 (include <CustomRectItem.h>)
 		 (include <QGraphicsScene>)
 		 (include <QDebug>)
+
+		 (enum Coord
+		       (DX 20)
+		       (DY 20)
+		       (NX 30)
+		       (NY 30))
 		 
 		 (function ("CustomLineItem::CustomLineItem" ((line :type "const QLineF&"))
 							     nil 
 							     :parent-ctor
 							     ((QGraphicsLineItem line)))
+			   (statements
+			      (setf m_pixmap_item (new (funcall QGraphicsPixmapItem this))
+				    m_pixmap (new (funcall QPixmap (* DX (- NX 1)) (* DY (- NY 1)))))
+			      (funcall m_pixmap->fill "Qt::green")
+			      (funcall m_pixmap_item->setPixmap *m_pixmap))
 			   (let ((w :init 17)
 				 (h :init w))
 			     (setf m_p1 (new (funcall CustomRectItem
@@ -84,13 +95,14 @@
 						      this
 						      this
 						      false)))
-			     (funcall m_p2->setPos (funcall line.p2)))
+			     (funcall m_p2->setPos (funcall line.p2))
+			     )
 
 			   (let ((pos :type "std::vector<std::pair<int,int> >" :init (list (list 1 1)
 											   (list 2 2)
 											   (list 2 3))))
 			     
-			     (setf m_pixels (new (funcall CustomItemPixelsGroup 20 20 10 10 pos this)))))
+			     (setf m_pixels (new (funcall CustomItemPixelsGroup DX DY NX NX pos this)))))
 		 #+nil (function ("CustomLineItem::itemChange" ((change :type GraphicsItemChange)
 							  (value :type "const QVariant&")) QVariant)
 					;(<< (funcall qDebug) (string "change customLine ") (funcall this->pos) (string " ") value)
@@ -124,7 +136,9 @@
 			  (access-specifier private)
 			  (decl ((m_p1 :type "CustomRectItem*" :init nullptr )
 				 (m_p2 :type "CustomRectItem*" :init nullptr )
-				 (m_pixels :type "CustomItemPixelsGroup*" :init nullptr )))))))
+				 (m_pixels :type "CustomItemPixelsGroup*" :init nullptr )
+				 (m_pixmap_item :type "QGraphicsPixmapItem*" :init nullptr)
+				 (m_pixmap :type "QPixmap*" :init nullptr)))))))
     (write-source "CustomLineItem" "h" header)
     (write-source "CustomLineItem" "cpp" code))
 
@@ -416,11 +430,7 @@
 					;(handle_periph :init (new (funcall CustomRectItem (funcall QRectF c c w w))))
 			      )
 			  
-			  (let ((pixmapItem :type QGraphicsPixmapItem* :ctor (new (funcall QGraphicsPixmapItem))))
-			    (funcall scene->addItem pixmapItem)
-			    (let ((pm :ctor (new (funcall QPixmap 256 256))))
-			      (funcall pm->fill "Qt::green")
-			      (funcall pixmapItem->setPixmap *pm)))
+			  
 			  
 			  (let ((line :init (new (funcall CustomLineItem (funcall QLineF 40 40 80 80)))))
 			    (funcall scene->addItem line)
