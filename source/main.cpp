@@ -84,6 +84,18 @@ int main(int argc, char **argv) {
           // initiate the line to some random ;
         }
 
+        {
+          QGraphicsPixmapItem *pixmapItem(new QGraphicsPixmapItem());
+
+          scene->addItem(pixmapItem);
+          {
+            auto pm(new QPixmap(256, 256));
+
+            pm->fill(Qt::green);
+            pixmapItem->setPixmap(*pm);
+          }
+        }
+
         scene->addItem(grid);
         // change position of handles now, so that the line is redrawn by
         // CustomRect::itemChange;

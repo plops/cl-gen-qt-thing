@@ -24,6 +24,9 @@
 
 ;; https://github.com/mjspncr/lzz3
 
+;; http://www.qtcentre.org/threads/6929-Any-fast-way(-lt-10ms)-to-display-640*480-QImage-on-QGraphicsScene
+;; 26th March 2011, 17:04
+
 (defun write-source (name extension code)
   (let ((fn (merge-pathnames (format nil "stage/cl-gen-qt-thing/source/~a.~a" name extension)
 			     (user-homedir-pathname))))
@@ -415,12 +418,18 @@
 			  
 			  
 			  
-			  (let ((line :init (new (funcall CustomLineItem (funcall QLineF 40 40 80 80)))#+nil (funcall scene->addLine (funcall QLineF 40 40 80 80))))
+			  (let ((line :init (new (funcall CustomLineItem (funcall QLineF 40 40 80 80)))))
 			    (funcall scene->addItem line)
 			    (raw "// initiate the line to some random ")
 					;(funcall handle_center->addLine line true)
 					;(funcall handle_periph->addLine line false)
 			    )
+
+			  (let ((pixmapItem :type QGraphicsPixmapItem* :ctor (new (funcall QGraphicsPixmapItem))))
+			    (funcall scene->addItem pixmapItem)
+			    (let ((pm :ctor (new (funcall QPixmap 256 256))))
+			      (funcall pm->fill "Qt::green")
+			      (funcall pixmapItem->setPixmap *pm)))
 
 			  
 			  (funcall scene->addItem grid)
