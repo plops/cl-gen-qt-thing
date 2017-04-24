@@ -22,18 +22,10 @@ CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
   }
 }
 
-QVariant CustomLineItem::itemChange(GraphicsItemChange change,
-                                    const QVariant &value) {
-  if (((ItemPositionChange == change) && scene())) {
-    // value is the same as pos();
-    (qDebug() << "change pos customLine " << this->pos() << " " << value);
-  }
-
-  return QGraphicsItem::itemChange(change, value);
-}
-
 CustomItemPixelsGroup *CustomLineItem::getPixels() { return m_pixels; }
 
-void CustomLineItem::setPixels(std::vector<std::pair<int, int>> vecs) {
-  m_pixels = new CustomItemPixelsGroup(20, 20, 10, 10, vecs, this);
+void CustomLineItem::setPixels(int dx, int dy, int nx, int ny,
+                               std::vector<std::pair<int, int>> vecs) {
+  delete m_pixels;
+  m_pixels = new CustomItemPixelsGroup(dx, dy, nx, ny, vecs, this);
 }

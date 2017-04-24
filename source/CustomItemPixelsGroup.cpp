@@ -30,6 +30,10 @@ CustomItemPixelsGroup::CustomItemPixelsGroup(
   }
 }
 
-not processable : (loop for e in '(dx dy nx ny) (function (
-                      (format nil CustomItemPixelsGroup::~a e)nil int)(return (
-                      format nil m_ ~a e))))
+int CustomItemPixelsGroup::dx() { return m_dx; }
+
+int CustomItemPixelsGroup::dy() { return m_dy; }
+
+int CustomItemPixelsGroup::nx() { return m_nx; }
+
+int CustomItemPixelsGroup::ny() { return m_ny; }

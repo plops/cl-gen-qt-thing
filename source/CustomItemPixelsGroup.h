@@ -7,6 +7,10 @@ public:
   explicit CustomItemPixelsGroup(int dx, int dy, int nx, int ny,
                                  std::vector<std::pair<int, int>> vecs,
                                  QGraphicsItem *parent);
+  int dx();
+  int dy();
+  int nx();
+  int ny();
 
 private:
   unsigned int m_dx;

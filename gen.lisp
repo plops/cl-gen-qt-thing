@@ -49,79 +49,6 @@
 	     )
 	 `(function (,name ,params ,ret :ctor ,ctor :specifier ,specifier :parent-ctor ,parent-ctor)))))
 
-(emit-cpp :code
-	  `(with-compilation-unit
-	       ,@(function-declarations *bla*)))
-
-(let ((code `(with-compilation-unit
-		   (include <CustomItemPixelsGroup.h>)
-		 (include <QGraphicsRectItem>)
-		 (function ("CustomItemPixelsGroup::CustomItemPixelsGroup" ((dx :type int)
-									    (dy :type int)
-									    (nx :type int)
-									    (ny :type int)
-									    (vecs :type "std::vector<std::pair<int,int> >")
-									    (parent :type QGraphicsItem*))
-									   nil
-									   :ctor
-									   ((m_dx dx)
-									    (m_dy dy)
-									    (m_nx nx)
-									    (m_ny ny)
-									    )
-									   :parent-ctor ((QGraphicsItemGroup parent)))
-			   (with-compilation-unit
-			       (let ((dx :init m_dx)
-				     (dy :init m_dy)
-				     (nx :init m_nx)
-				     (ny :init m_ny)
-				     )
-				 (for-range (v vecs)
-					    (let ((i :init "v.first")
-						  (j :init "v.second")
-						  (eps :init -2))
-					      (let ((y1 :init (- (* dy j) eps))
-						    (x1 :init (- (* dx i) eps))
-						    (y2 :init (+ (* dy (+ 1 j)) eps))
-						    (x2 :init (+ (* dx (+ 1 i)) eps)))
-						(funcall "this->addToGroup" (new (funcall QGraphicsRectItem
-											  (funcall QRectF x1 y1 (- x2 x1) (- y2 y1))
-											  #+nil  (funcall QPen "Qt::red" 3 "Qt::SolidLine"
-													  "Qt::FlatCap"
-													  "Qt::MiterJoin"))))))))))
-		 ,@(loop for e in '(dx dy nx ny) collect
-		       `(function (,(format nil "CustomItemPixelsGroup::~a" e) () int)
-				  (return ,(format nil "m_~a" e))))))
-	(header `(with-compilation-unit
-		     (raw "#pragma once")
-
-		   
-		   (include <QGraphicsItemGroup>)
-		   (include <vector>)
-		   (include <utility>)
-		   (class CustomItemPixelsGroup ("public QGraphicsItemGroup")
-	       (access-specifier public)
-	       (function (CustomItemPixelsGroup ((dx :type int)
-						 (dy :type int)
-						 (nx :type int)
-						 (ny :type int)
-						 (vecs :type "std::vector<std::pair<int,int> >")
-						 (parent :type QGraphicsItem*))
-						explicit))
-	       
-	       (access-specifier private)
-	       (decl ((m_dx :type "unsigned int")
-		      (m_dy :type "unsigned int")
-		      (m_nx :type "unsigned int")
-		      (m_ny :type "unsigned int")))))))
-  (emit-cpp :code code :clear-env t)
-  (defparameter *bla* *env-functions*)
-  
-  #+nil
-  (write-source "CustomItemPixelsGroup" "h" header)
-  #+nil
-    (write-source "CustomItemPixelsGroup" "cpp" code))
-
 
 (progn
   (defparameter *main-cpp-filename*  (merge-pathnames "stage/cl-gen-qt-thing/source/main.cpp"
@@ -161,7 +88,7 @@
 											   (list 2 3))))
 			     
 			     (setf m_pixels (new (funcall CustomItemPixelsGroup 20 20 10 10 pos this)))))
-		 (function ("CustomLineItem::itemChange" ((change :type GraphicsItemChange)
+		 #+nil (function ("CustomLineItem::itemChange" ((change :type GraphicsItemChange)
 							  (value :type "const QVariant&")) QVariant)
 			   ;(<< (funcall qDebug) (string "change customLine ") (funcall this->pos) (string " ") value)
 			   (if (&& (== ItemPositionChange change)
@@ -172,8 +99,15 @@
 			   (return (funcall "QGraphicsItem::itemChange" change value)))
 		 (function ("CustomLineItem::getPixels" () CustomItemPixelsGroup*)
 			   (return m_pixels))
-		 (function ("CustomLineItem::setPixels" ((vecs :type "std::vector<std::pair<int,int> >")) void)
-			   (setf m_pixels (new (funcall CustomItemPixelsGroup 20 20 10 10 vecs this))))))
+		 (function ("CustomLineItem::setPixels" ((dx :type int)
+							 (dy :type int)
+							 (nx :type int)
+							 (ny :type int)
+							 (vecs :type "std::vector<std::pair<int,int> >")) void)
+			   (delete m_pixels)
+			   (setf m_pixels (new (funcall CustomItemPixelsGroup
+							dx dy nx ny
+							vecs this))))))
 	(header `(with-compilation-unit
 		     (raw "#pragma once")
 		   (include <QtCore>)
@@ -183,17 +117,20 @@
 		   (class CustomLineItem ("public QGraphicsLineItem")
 			  (access-specifier public)
 			  (function (CustomLineItem ((line :type "const QLineF&"))  explicit))
-			  (function (itemChange ((change :type GraphicsItemChange)
+			  #+nil (function (itemChange ((change :type GraphicsItemChange)
 						 (value :type "const QVariant&")) QVariant))
 			  (function (getPixels () CustomItemPixelsGroup*))
-			  (function (setPixels ((vecs :type "std::vector<std::pair<int,int> >")) void))
+			  (function (setPixels ((dx :type int)
+						(dy :type int)
+						(nx :type int)
+						(ny :type int)
+						(vecs :type "std::vector<std::pair<int,int> >")) void))
 			  (access-specifier private)
 			  (decl ((m_p1 :type "CustomRectItem*" :init nullptr )
 				 (m_p2 :type "CustomRectItem*" :init nullptr )
 				 (m_pixels :type "CustomItemPixelsGroup*" :init nullptr )))))))
     (write-source "CustomLineItem" "h" header)
-    (write-source "CustomLineItem" "cpp" code)
-    )
+    (write-source "CustomLineItem" "cpp" code))
 
   (let ((code `(with-compilation-unit
 		   (include <CustomRectItem.h>)
@@ -218,14 +155,20 @@
 				   (funcall scene))
 			       (statements
 				(funcall moveLineToCenter (funcall value.toPointF))
-				(funcall "m_line->scene()->removeItem" (funcall m_line->getPixels))
-				(let ( (pos :type "std::vector<std::pair<int,int> >" ))
-				  (dotimes (i 10)
-				    (let ((line :init "m_line->line()")
-					  (p1 :init (funcall line.p1))
-					  (p2 :init (funcall line.p2)))
-				      (funcall pos.push_back (funcall "std::make_pair" i i))))
-				 (funcall m_line->setPixels pos))))
+				(let ((old_pixels :init (funcall m_line->getPixels)))
+				  (funcall "m_line->scene()->removeItem" old_pixels)
+				  (let ( (pos :type "std::vector<std::pair<int,int> >" ))
+				    (dotimes (i 10)
+				      (let ((line :init "m_line->line()")
+					    (p1 :init (funcall line.p1))
+					    (p2 :init (funcall line.p2)))
+					(funcall pos.push_back (funcall "std::make_pair" i i))))
+				    (funcall m_line->setPixels
+					     (funcall old_pixels->dx)
+					     (funcall old_pixels->dy)
+					     (funcall old_pixels->nx)
+					     (funcall old_pixels->ny)
+					     pos)))))
 			   (return (funcall "QGraphicsItem::itemChange" change value)))
 		 (function ("CustomRectItem::moveLineToCenter" ((newPos :type QPointF)) void)
 			   (let ((p1 :init (? m_first_point_p newPos "m_line->line().p1()"))
@@ -248,8 +191,7 @@
 			  (function (itemChange ((change :type GraphicsItemChange)
 						 (value :type "const QVariant&")) QVariant))
 			  (function (moveLineToCenter ((newPos :type QPointF)) void))
-			  (decl ((m_line :type "CustomLineItem*"  :init nullptr
-					 )
+			  (decl ((m_line :type "CustomLineItem*"  :init nullptr)
 					;(m_text :type "QGraphicsTextItem*" :init nullptr)
 					;(m_pixels :type "CustomItemPixelsGroup*" :init nullptr)
 				 (m_first_point_p :type bool  :init false
@@ -271,15 +213,13 @@
 									   ((m_dx dx)
 									    (m_dy dy)
 									    (m_nx nx)
-									    (m_ny ny)
-									    )
+									    (m_ny ny))
 									   :parent-ctor ((QGraphicsItemGroup parent)))
 			   (with-compilation-unit
 			       (let ((dx :init m_dx)
 				     (dy :init m_dy)
 				     (nx :init m_nx)
-				     (ny :init m_ny)
-				     )
+				     (ny :init m_ny))
 				 (for-range (v vecs)
 					    (let ((i :init "v.first")
 						  (j :init "v.second")
@@ -293,9 +233,9 @@
 											  #+nil  (funcall QPen "Qt::red" 3 "Qt::SolidLine"
 													  "Qt::FlatCap"
 													  "Qt::MiterJoin"))))))))))
-		 (loop for e in '(dx dy nx ny)
-		      (function ((format nil "CustomItemPixelsGroup::~a" e) () int)
-				(return (format nil "m_~a" e))))))
+		 ,@(loop for e in '(dx dy nx ny) collect
+		      `(function (,(format nil "CustomItemPixelsGroup::~a" e) () int)
+				(return ,(format nil "m_~a" e))))))
 	(header `(with-compilation-unit
 		     (raw "#pragma once")
 
@@ -312,7 +252,8 @@
 						 (vecs :type "std::vector<std::pair<int,int> >")
 						 (parent :type QGraphicsItem*))
 						explicit))
-	       
+	       ,@(loop for e in '(dx dy nx ny) collect
+		      `(function (,(format nil "~a" e) () int)))
 	       (access-specifier private)
 	       (decl ((m_dx :type "unsigned int")
 		      (m_dy :type "unsigned int")
@@ -353,14 +294,6 @@
 
 	
 
-
-	
-	
-	
-	
-
-	
-	
 	
 	
 

@@ -14,21 +14,26 @@ QVariant CustomRectItem::itemChange(GraphicsItemChange change,
                                     const QVariant &value) {
   if (((ItemPositionChange == change) && scene())) {
     moveLineToCenter(value.toPointF());
-    m_line->scene()->removeItem(m_line->getPixels());
     {
-      std::vector<std::pair<int, int>> pos;
+      auto old_pixels = m_line->getPixels();
 
-      for (unsigned int i = 0; (i < 10); i += 1) {
-        {
-          auto line = m_line->line();
-          auto p1 = line.p1();
-          auto p2 = line.p2();
+      m_line->scene()->removeItem(old_pixels);
+      {
+        std::vector<std::pair<int, int>> pos;
 
-          pos.push_back(std::make_pair(i, i));
+        for (unsigned int i = 0; (i < 10); i += 1) {
+          {
+            auto line = m_line->line();
+            auto p1 = line.p1();
+            auto p2 = line.p2();
+
+            pos.push_back(std::make_pair(i, i));
+          }
         }
-      }
 
-      m_line->setPixels(pos);
+        m_line->setPixels(old_pixels->dx(), old_pixels->dy(), old_pixels->nx(),
+                          old_pixels->ny(), pos);
+      }
     }
   }
 
