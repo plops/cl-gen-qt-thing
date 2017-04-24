@@ -12,6 +12,8 @@ CustomRectItem::CustomRectItem(const QRectF &rect, QGraphicsItem *parent,
 }
 
 inline float lineDistance(QLineF line, QPointF p0) {
+  // https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line vector
+  // formulation;
   {
     auto p1(line.p1());
     auto p2(line.p2());
@@ -37,18 +39,12 @@ QVariant CustomRectItem::itemChange(GraphicsItemChange change,
       int nx = m_line->getPixels()->nx();
       int ny = m_line->getPixels()->ny();
 
-      for (unsigned int j = 0; (j < ny); j += 1) {
-        for (unsigned int i = 0; (i < nx); i += 1) {
-          if ((lineDistance(line, QPointF((dx * (i + 1)), (dy * (j + 1)))) <
-               sqrtf((dx * dy)))) {
-            (qDebug() << "close " << i << " " << j << " "
-                      << lineDistance(line, QPointF((i + 1), (j + 1))));
-            pos.push_back(std::make_pair(i, j));
-
-          } else {
-            (qDebug() << "far  " << i << " " << j << " "
-                      << lineDistance(line,
-                                      QPointF((dx * (i + 1)), (dy * (j + 1)))));
+      for (unsigned int j = 0; (j < (ny - 1)); j += 1) {
+        for (unsigned int i = 0; (i < (nx - 1)); i += 1) {
+          if ((fabsf(lineDistance(line, QPointF((dx * (i + (1.5e+0f))),
+                                                (dy * (j + (1.5e+0f)))))) <
+               ((5.e-1f) * sqrtf((dx * dy))))) {
+            pos.push_back(std::make_pair((i + 1), (j + 1)));
           }
         }
       }

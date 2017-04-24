@@ -143,30 +143,11 @@
 			   (funcall this->setFlag "QGraphicsItem::ItemIsMovable")
 			   (funcall this->setFlag "QGraphicsItem::ItemSendsScenePositionChanges"))
 
-
-		 #+nil (function (lineDistance ((line :type QLineF)
-					  (p0 :type QPointF))
-					 "inline float"
-					 )
-			   ;;https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
-			   (let ((p1 :init (funcall line.p1))
-				 (p2 :init (funcall line.p2))
-				 ,@(loop for i below 3 appending
-					(loop for c in '(x y) collect
-					     `(,(format nil "~a~d" c i) :init ,(format nil "p~a.~a()" i c))))
-				 (scal :init (/ (funcall hypotf (- y2 y1)
-						      (- x2 x1))))
-				 (top :init (funcall fabsf (+ (*  1s0 (- y2 y1) x0)
-							      (* -1s0 (- x2 x1) y0)
-							      (*  1s0 x2 y1)
-							      (* -1s0 y2 x1)))))
-			     (return (* top scal))))
 		 (function (lineDistance ((line :type QLineF)
 					  (p0 :type QPointF))
 					 "inline float"
 					 )
-			   ;;https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
-			   ;; vector formulation
+			   (raw "// https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line vector formulation")
 			   (let ((p1 :ctor (funcall line.p1))
 				 (p2 :ctor (funcall line.p2))
 				 (n_len :init (funcall QVector2D (- p1 p2)))
@@ -190,27 +171,15 @@
 				      (line :init "m_line->line()")
 				      ,@(loop for e in '(dx dy nx ny) collect
 					     `(,e :type int :init (funcall (slot->value "m_line->getPixels()" ,e)))))
-				  (dotimes (j ny)
-				    (dotimes (i nx)
+				  (dotimes (j (- ny 1))
+				    (dotimes (i (- nx 1))
 				      (if (<
-					   (funcall lineDistance line (funcall QPointF
-										 (* dx (+ i 1))
-										 (* dy (+ j 1))))
-					   (funcall sqrtf (* dx dy)))
+					   (funcall fabsf (funcall lineDistance line (funcall QPointF
+										(* dx (+ i 1.5s0))
+										(* dy (+ j 1.5s0)))))
+					   (* .5s0 (funcall sqrtf (* dx dy))))
 					  (statements
-					   (<< (funcall qDebug) (string "close ")
-					       i (string " ")
-					       j (string " ")
-					       (funcall lineDistance line (funcall QPointF
-										    (+ i 1)
-										    (+ j 1))) )
-					   (funcall pos.push_back (funcall "std::make_pair" i j)))
-					  (<< (funcall qDebug) (string "far  ")
-					       i (string " ")
-					       j (string " ")
-					       (funcall lineDistance line (funcall QPointF
-										    (* dx (+ i 1))
-										    (* dy (+ j 1)))) ))))
+					   (funcall pos.push_back (funcall "std::make_pair" (+ i 1) (+ j 1)))))))
 				  (funcall m_line->setPixels pos))))
 			   (return (funcall "QGraphicsItem::itemChange" change value)))
 		 (function ("CustomRectItem::moveLineToCenter" ((newPos :type QPointF)) void)
