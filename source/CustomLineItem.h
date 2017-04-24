@@ -7,8 +7,7 @@ class CustomLineItem : public QGraphicsLineItem {
 public:
   explicit CustomLineItem(const QLineF &line);
   CustomItemPixelsGroup *getPixels();
-  void setPixels(int dx, int dy, int nx, int ny,
-                 std::vector<std::pair<int, int>> vecs);
+  void setPixels(std::vector<std::pair<int, int>> vecs);
 
 private:
   CustomRectItem *m_p1 = nullptr;

@@ -90,7 +90,7 @@
 			     (setf m_pixels (new (funcall CustomItemPixelsGroup 20 20 10 10 pos this)))))
 		 #+nil (function ("CustomLineItem::itemChange" ((change :type GraphicsItemChange)
 							  (value :type "const QVariant&")) QVariant)
-			   ;(<< (funcall qDebug) (string "change customLine ") (funcall this->pos) (string " ") value)
+					;(<< (funcall qDebug) (string "change customLine ") (funcall this->pos) (string " ") value)
 			   (if (&& (== ItemPositionChange change)
 				   (funcall scene))
 			       (statements
@@ -99,15 +99,12 @@
 			   (return (funcall "QGraphicsItem::itemChange" change value)))
 		 (function ("CustomLineItem::getPixels" () CustomItemPixelsGroup*)
 			   (return m_pixels))
-		 (function ("CustomLineItem::setPixels" ((dx :type int)
-							 (dy :type int)
-							 (nx :type int)
-							 (ny :type int)
-							 (vecs :type "std::vector<std::pair<int,int> >")) void)
-			   (delete m_pixels)
-			   (setf m_pixels (new (funcall CustomItemPixelsGroup
-							dx dy nx ny
-							vecs this))))))
+		 (function ("CustomLineItem::setPixels" ((vecs :type "std::vector<std::pair<int,int> >")) void)
+			   (let ,(loop for e in '(dx dy nx ny) collect `(,e :init (funcall ,(format nil "m_pixels->~a" e))))
+			     (delete m_pixels)
+			     (setf m_pixels (new (funcall CustomItemPixelsGroup
+							  dx dy nx ny
+							  vecs this)))))))
 	(header `(with-compilation-unit
 		     (raw "#pragma once")
 		   (include <QtCore>)
@@ -120,11 +117,7 @@
 			  #+nil (function (itemChange ((change :type GraphicsItemChange)
 						 (value :type "const QVariant&")) QVariant))
 			  (function (getPixels () CustomItemPixelsGroup*))
-			  (function (setPixels ((dx :type int)
-						(dy :type int)
-						(nx :type int)
-						(ny :type int)
-						(vecs :type "std::vector<std::pair<int,int> >")) void))
+			  (function (setPixels ((vecs :type "std::vector<std::pair<int,int> >")) void))
 			  (access-specifier private)
 			  (decl ((m_p1 :type "CustomRectItem*" :init nullptr )
 				 (m_p2 :type "CustomRectItem*" :init nullptr )
@@ -137,6 +130,7 @@
 		 (include <QGraphicsScene>)
 		 (include <utility>)
 		 (include <vector>)
+		 (include <QVector2D>)
 		 (function ("CustomRectItem::CustomRectItem" ((rect :type "const QRectF&")
 							      (parent :type QGraphicsItem*)
 							      (line :type CustomLineItem*)
@@ -148,6 +142,42 @@
 							     :parent-ctor ((QGraphicsRectItem rect parent)))
 			   (funcall this->setFlag "QGraphicsItem::ItemIsMovable")
 			   (funcall this->setFlag "QGraphicsItem::ItemSendsScenePositionChanges"))
+
+
+		 #+nil (function (lineDistance ((line :type QLineF)
+					  (p0 :type QPointF))
+					 "inline float"
+					 )
+			   ;;https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
+			   (let ((p1 :init (funcall line.p1))
+				 (p2 :init (funcall line.p2))
+				 ,@(loop for i below 3 appending
+					(loop for c in '(x y) collect
+					     `(,(format nil "~a~d" c i) :init ,(format nil "p~a.~a()" i c))))
+				 (scal :init (/ (funcall hypotf (- y2 y1)
+						      (- x2 x1))))
+				 (top :init (funcall fabsf (+ (*  1s0 (- y2 y1) x0)
+							      (* -1s0 (- x2 x1) y0)
+							      (*  1s0 x2 y1)
+							      (* -1s0 y2 x1)))))
+			     (return (* top scal))))
+		 (function (lineDistance ((line :type QLineF)
+					  (p0 :type QPointF))
+					 "inline float"
+					 )
+			   ;;https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
+			   ;; vector formulation
+			   (let ((p1 :ctor (funcall line.p1))
+				 (p2 :ctor (funcall line.p2))
+				 (n_len :init (funcall QVector2D (- p1 p2)))
+				 (n :ctor (funcall (slot-value n_len  normalized)))
+				 (a_p :ctor (funcall QVector2D (- p1 p0)))
+				 (a_p_dot_n :ctor (funcall "QVector2D::dotProduct" a_p n))
+				 )
+			     (return (funcall (slot-value (- a_p (* a_p_dot_n n))
+							  length)))))
+
+		 
 		 (function ("CustomRectItem::itemChange" ((change :type GraphicsItemChange)
 							  (value :type "const QVariant&")) QVariant)
 			   #+nil (<< (funcall qDebug) (string "change rect ") (funcall this->pos) (string " ")  (string " ") value)
@@ -155,20 +185,33 @@
 				   (funcall scene))
 			       (statements
 				(funcall moveLineToCenter (funcall value.toPointF))
-				(let ((old_pixels :init (funcall m_line->getPixels)))
-				  (funcall "m_line->scene()->removeItem" old_pixels)
-				  (let ( (pos :type "std::vector<std::pair<int,int> >" ))
-				    (dotimes (i 10)
-				      (let ((line :init "m_line->line()")
-					    (p1 :init (funcall line.p1))
-					    (p2 :init (funcall line.p2)))
-					(funcall pos.push_back (funcall "std::make_pair" i i))))
-				    (funcall m_line->setPixels
-					     (funcall old_pixels->dx)
-					     (funcall old_pixels->dy)
-					     (funcall old_pixels->nx)
-					     (funcall old_pixels->ny)
-					     pos)))))
+				(funcall "m_line->scene()->removeItem" (funcall m_line->getPixels))
+				(let ((pos :type "std::vector<std::pair<int,int> >" )
+				      (line :init "m_line->line()")
+				      ,@(loop for e in '(dx dy nx ny) collect
+					     `(,e :type int :init (funcall (slot->value "m_line->getPixels()" ,e)))))
+				  (dotimes (j ny)
+				    (dotimes (i nx)
+				      (if (<
+					   (funcall lineDistance line (funcall QPointF
+										 (* dx (+ i 1))
+										 (* dy (+ j 1))))
+					   (funcall sqrtf (* dx dy)))
+					  (statements
+					   (<< (funcall qDebug) (string "close ")
+					       i (string " ")
+					       j (string " ")
+					       (funcall lineDistance line (funcall QPointF
+										    (+ i 1)
+										    (+ j 1))) )
+					   (funcall pos.push_back (funcall "std::make_pair" i j)))
+					  (<< (funcall qDebug) (string "far  ")
+					       i (string " ")
+					       j (string " ")
+					       (funcall lineDistance line (funcall QPointF
+										    (* dx (+ i 1))
+										    (* dy (+ j 1)))) ))))
+				  (funcall m_line->setPixels pos))))
 			   (return (funcall "QGraphicsItem::itemChange" change value)))
 		 (function ("CustomRectItem::moveLineToCenter" ((newPos :type QPointF)) void)
 			   (let ((p1 :init (? m_first_point_p newPos "m_line->line().p1()"))

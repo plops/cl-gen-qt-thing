@@ -24,8 +24,14 @@ CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
 
 CustomItemPixelsGroup *CustomLineItem::getPixels() { return m_pixels; }
 
-void CustomLineItem::setPixels(int dx, int dy, int nx, int ny,
-                               std::vector<std::pair<int, int>> vecs) {
-  delete m_pixels;
-  m_pixels = new CustomItemPixelsGroup(dx, dy, nx, ny, vecs, this);
+void CustomLineItem::setPixels(std::vector<std::pair<int, int>> vecs) {
+  {
+    auto dx = m_pixels->dx();
+    auto dy = m_pixels->dy();
+    auto nx = m_pixels->nx();
+    auto ny = m_pixels->ny();
+
+    delete m_pixels;
+    m_pixels = new CustomItemPixelsGroup(dx, dy, nx, ny, vecs, this);
+  }
 }
