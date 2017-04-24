@@ -29,3 +29,7 @@ CustomItemPixelsGroup::CustomItemPixelsGroup(
     }
   }
 }
+
+not processable : (loop for e in '(dx dy nx ny) (function (
+                      (format nil CustomItemPixelsGroup::~a e)nil int)(return (
+                      format nil m_ ~a e))))

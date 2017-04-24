@@ -38,6 +38,91 @@
        code))
     (sb-ext:run-program "/usr/bin/clang-format" (list "-i" (namestring fn)))))
 
+(defun function-declarations (ls)
+  (loop for e in ls collect
+       (let ((name (getf e :name))
+	     (params (getf e :params))
+	     (ret (getf e :ret))
+	     (ctor (getf e :ctor))
+	     (specifier (getf e :specifier))
+	     (parent-ctor (getf e :parent-ctor))
+	     )
+	 `(function (,name ,params ,ret :ctor ,ctor :specifier ,specifier :parent-ctor ,parent-ctor)))))
+
+(emit-cpp :code
+	  `(with-compilation-unit
+	       ,@(function-declarations *bla*)))
+
+(let ((code `(with-compilation-unit
+		   (include <CustomItemPixelsGroup.h>)
+		 (include <QGraphicsRectItem>)
+		 (function ("CustomItemPixelsGroup::CustomItemPixelsGroup" ((dx :type int)
+									    (dy :type int)
+									    (nx :type int)
+									    (ny :type int)
+									    (vecs :type "std::vector<std::pair<int,int> >")
+									    (parent :type QGraphicsItem*))
+									   nil
+									   :ctor
+									   ((m_dx dx)
+									    (m_dy dy)
+									    (m_nx nx)
+									    (m_ny ny)
+									    )
+									   :parent-ctor ((QGraphicsItemGroup parent)))
+			   (with-compilation-unit
+			       (let ((dx :init m_dx)
+				     (dy :init m_dy)
+				     (nx :init m_nx)
+				     (ny :init m_ny)
+				     )
+				 (for-range (v vecs)
+					    (let ((i :init "v.first")
+						  (j :init "v.second")
+						  (eps :init -2))
+					      (let ((y1 :init (- (* dy j) eps))
+						    (x1 :init (- (* dx i) eps))
+						    (y2 :init (+ (* dy (+ 1 j)) eps))
+						    (x2 :init (+ (* dx (+ 1 i)) eps)))
+						(funcall "this->addToGroup" (new (funcall QGraphicsRectItem
+											  (funcall QRectF x1 y1 (- x2 x1) (- y2 y1))
+											  #+nil  (funcall QPen "Qt::red" 3 "Qt::SolidLine"
+													  "Qt::FlatCap"
+													  "Qt::MiterJoin"))))))))))
+		 ,@(loop for e in '(dx dy nx ny) collect
+		       `(function (,(format nil "CustomItemPixelsGroup::~a" e) () int)
+				  (return ,(format nil "m_~a" e))))))
+	(header `(with-compilation-unit
+		     (raw "#pragma once")
+
+		   
+		   (include <QGraphicsItemGroup>)
+		   (include <vector>)
+		   (include <utility>)
+		   (class CustomItemPixelsGroup ("public QGraphicsItemGroup")
+	       (access-specifier public)
+	       (function (CustomItemPixelsGroup ((dx :type int)
+						 (dy :type int)
+						 (nx :type int)
+						 (ny :type int)
+						 (vecs :type "std::vector<std::pair<int,int> >")
+						 (parent :type QGraphicsItem*))
+						explicit))
+	       
+	       (access-specifier private)
+	       (decl ((m_dx :type "unsigned int")
+		      (m_dy :type "unsigned int")
+		      (m_nx :type "unsigned int")
+		      (m_ny :type "unsigned int")))))))
+  (emit-cpp :code code :clear-env t)
+  (defparameter *bla* *env-functions*)
+  
+  #+nil
+  (write-source "CustomItemPixelsGroup" "h" header)
+  #+nil
+    (write-source "CustomItemPixelsGroup" "cpp" code))
+
+
 (progn
   (defparameter *main-cpp-filename*  (merge-pathnames "stage/cl-gen-qt-thing/source/main.cpp"
 						      (user-homedir-pathname)))
@@ -208,7 +293,9 @@
 											  #+nil  (funcall QPen "Qt::red" 3 "Qt::SolidLine"
 													  "Qt::FlatCap"
 													  "Qt::MiterJoin"))))))))))
-		 ))
+		 (loop for e in '(dx dy nx ny)
+		      (function ((format nil "CustomItemPixelsGroup::~a" e) () int)
+				(return (format nil "m_~a" e))))))
 	(header `(with-compilation-unit
 		     (raw "#pragma once")
 
