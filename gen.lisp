@@ -84,9 +84,14 @@
 					(emit-cpp :code `(+ PPM_HEADER_LENGTH 
 							    (* 3
 							       (* DX (- NX 1))
-							       (* DY (- NY 1)))))))))
+							       (* DY (- NY 1)))))))
+			(g_image 
+			 :type ,(format nil "std::array<unsigned char,~a>"
+					(emit-cpp :code `(* 3
+							    (* DX (- NX 1))
+							    (* DY (- NY 1))))))))
 		 
-		 (function (toPPM (;(data :type "unsigned char*")
+		 (function (toPPM ((data :type "const unsigned char*")
 				   (w :type int)
 				   (h :type int))
 				  void)
@@ -102,15 +107,13 @@
 				 (funcall "std::setw" 4) w (string " ")
 				 (funcall "std::setw" 4) h (string " ")
 				 (funcall "std::setw" 3) 255 (string " "))
-			     (funcall oss.seekg 0 "ios::end")
-			     (let ((size :init (funcall oss.tellg))
-				   (i :init 0))
-			       (funcall oss.seekg 0 "ios::beg")
+			     
+			     (let ((i :init 0))
 			       (for-range ((c :type "const auto") (funcall oss.str)) 
 					  (setf (aref g_ppm_data i) (funcall "static_cast<unsigned char>" c))
-					  (+= i 1)))
-			     )
-			   )
+					  (+= i 1))
+			       (dotimes (j (* w h 3))
+				 (setf (aref g_ppm_data (+ i j)) (aref data j))))))
 		 
 		 (function ("CustomLineItem::CustomLineItem" ((line :type "const QLineF&"))
 							     nil 
@@ -119,8 +122,16 @@
 			   (statements
 			    (setf m_pixmap_item (new (funcall QGraphicsPixmapItem this))
 				    m_pixmap (new (funcall QPixmap (* DX (- NX 1)) (* DY (- NY 1)))))
-			    (funcall m_pixmap->fill "Qt::green")
-			    (funcall toPPM (* DX (- NX 1)) (* DY (- NY 1)))
+			    ;(funcall m_pixmap->fill "Qt::green")
+			    (dotimes (i (* DX (- NX 1)))
+			      (dotimes (j (* DY (- NY 1)))
+				(setf (aref g_image (+ 0 (* 3 (+ j (* i (* DX (- NX 1))))))) i
+				      (aref g_image (+ 1 (* 3 (+ j (* i (* DX (- NX 1))))))) j
+				      (aref g_image (+ 2 (* 3 (+ j (* i (* DX (- NX 1))))))) 12)))
+			    (funcall toPPM (funcall g_image.data) (* DX (- NX 1)) (* DY (- NY 1)))
+			    (funcall m_pixmap->loadFromData (funcall g_ppm_data.data)
+				      (funcall g_ppm_data.size)
+				     (string "PPM"))
 			    ; (funcall m_pixmap_item->setZValue "std::numeric_limits<qreal>::min()")
 			    (funcall m_pixmap_item->setPixmap *m_pixmap))
 			   (let ((w :init 17)
