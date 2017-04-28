@@ -4,16 +4,10 @@
 #include <QGraphicsScene>
 #include <assert.h>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
-enum Coord { DX = 20, DY = 20, NX = 30, NY = 30, PPM_HEADER_LENGTH = 17 };
-
-std::array<unsigned char,
-           (PPM_HEADER_LENGTH + (3 * (DX * (NX - 1)) * (DY * (NY - 1))))>
-    g_ppm_data;
-std::array<unsigned char, (3 * (DX * (NX - 1)) * (DY * (NY - 1)))> g_image;
-
-void toPPM(const unsigned char *data, int w, int h) {
-  g_ppm_data.fill(0);
+void CustomLineItem::createPPMHeader(int w, int h) {
+  m_ppm_data.fill(0);
   assert((w <= (DX * (NX - 1))));
   assert((h <= (DY * (NY - 1))));
   assert((w <= 9999));
@@ -27,31 +21,46 @@ void toPPM(const unsigned char *data, int w, int h) {
       auto i = 0;
 
       for (const auto c : oss.str()) {
-        g_ppm_data[i] = static_cast<unsigned char>(c);
+        m_ppm_data[i] = static_cast<unsigned char>(c);
         i += 1;
       }
 
       for (unsigned int j = 0; (j < (w * h * 3)); j += 1) {
-        g_ppm_data[(i + j)] = data[j];
+        m_ppm_data[(i + j)] = m_image[j];
       }
     }
   }
+}
+
+void CustomLineItem::updatePixmapFromImage() {
+  createPPMHeader((DX * (NX - 1)), (DY * (NY - 1)));
+  assert(m_pixmap->loadFromData(m_ppm_data.data(), m_ppm_data.size(), "PPM"));
+  (std::cout << "update" << std::endl);
 }
 
 CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
   m_pixmap_item = new QGraphicsPixmapItem(this);
   m_pixmap = new QPixmap((DX * (NX - 1)), (DY * (NY - 1)));
 
-  for (unsigned int i = 0; (i < (DX * (NX - 1))); i += 1) {
-    for (unsigned int j = 0; (j < (DY * (NY - 1))); j += 1) {
-      g_image[(0 + (3 * (j + (i * (DX * (NX - 1))))))] = i;
-      g_image[(1 + (3 * (j + (i * (DX * (NX - 1))))))] = j;
-      g_image[(2 + (3 * (j + (i * (DX * (NX - 1))))))] = 12;
+  {
+    auto img = m_image;
+
+    for (unsigned int i = 0; (i < (DX * (NX - 1))); i += 1) {
+      for (unsigned int j = 0; (j < (DY * (NY - 1))); j += 1) {
+        {
+          auto v = lineDistance(line, QPointF((i + (5.e-1f)), (j + (5.e-1f))));
+          auto vu = static_cast<unsigned char>(v);
+
+          m_image[(0 + (3 * (j + (i * (DX * (NX - 1))))))] = j;
+          m_image[(1 + (3 * (j + (i * (DX * (NX - 1))))))] = i;
+          m_image[(2 + (3 * (j + (i * (DX * (NX - 1))))))] = 100;
+        }
+      }
     }
+
+    updatePixmapFromImage();
   }
 
-  toPPM(g_image.data(), (DX * (NX - 1)), (DY * (NY - 1)));
-  m_pixmap->loadFromData(g_ppm_data.data(), g_ppm_data.size(), "PPM");
   m_pixmap_item->setPixmap(*m_pixmap);
 
   {
@@ -74,6 +83,10 @@ CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
 }
 
 CustomItemPixelsGroup *CustomLineItem::getPixels() { return m_pixels; }
+
+std::array<unsigned char, PPM_IMAGE_BYTES> *CustomLineItem::getImage() {
+  return &m_image;
+}
 
 void CustomLineItem::setPixels(std::vector<std::pair<int, int>> vecs) {
   {

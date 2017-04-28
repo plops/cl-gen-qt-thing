@@ -50,6 +50,26 @@ QVariant CustomRectItem::itemChange(GraphicsItemChange change,
       }
 
       m_line->setPixels(pos);
+      {
+        auto imgp = m_line->getImage();
+        auto img = *imgp;
+
+        for (unsigned int i = 0; (i < (DX * (NX - 1))); i += 1) {
+          for (unsigned int j = 0; (j < (DY * (NY - 1))); j += 1) {
+            {
+              auto v =
+                  lineDistance(line, QPointF((i + (5.e-1f)), (j + (5.e-1f))));
+              auto vu = static_cast<unsigned char>(v);
+
+              img[(0 + (3 * (j + (i * (DX * (NX - 1))))))] = j;
+              img[(1 + (3 * (j + (i * (DX * (NX - 1))))))] = i;
+              img[(2 + (3 * (j + (i * (DX * (NX - 1))))))] = vu;
+            }
+          }
+        }
+
+        m_line->updatePixmapFromImage();
+      }
     }
   }
 
