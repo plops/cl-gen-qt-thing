@@ -75,10 +75,11 @@
 							     :parent-ctor
 							     ((QGraphicsLineItem line)))
 			   (statements
-			      (setf m_pixmap_item (new (funcall QGraphicsPixmapItem this))
+			    (setf m_pixmap_item (new (funcall QGraphicsPixmapItem this))
 				    m_pixmap (new (funcall QPixmap (* DX (- NX 1)) (* DY (- NY 1)))))
-			      (funcall m_pixmap->fill "Qt::green")
-			      (funcall m_pixmap_item->setPixmap *m_pixmap))
+			    (funcall m_pixmap->fill "Qt::green")
+			    ; (funcall m_pixmap_item->setZValue "std::numeric_limits<qreal>::min()")
+			    (funcall m_pixmap_item->setPixmap *m_pixmap))
 			   (let ((w :init 17)
 				 (h :init w))
 			     (setf m_p1 (new (funcall CustomRectItem

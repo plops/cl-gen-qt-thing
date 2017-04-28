@@ -9,6 +9,7 @@ CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
   m_pixmap = new QPixmap((DX * (NX - 1)), (DY * (NY - 1)));
 
   m_pixmap->fill(Qt::green);
+  m_pixmap_item->setZValue(std::numeric_limits<qreal>::min());
   m_pixmap_item->setPixmap(*m_pixmap);
 
   {
