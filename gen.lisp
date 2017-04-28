@@ -63,12 +63,54 @@
 		 (include <CustomRectItem.h>)
 		 (include <QGraphicsScene>)
 		 (include <QDebug>)
+		 (include <assert.h>)
+
+		 (include <sstream>)
+		 (include <iomanip>)
+		 ;(include <iostream>)
 
 		 (enum Coord
-		       (DX 20)
-		       (DY 20)
-		       (NX 30)
-		       (NY 30))
+			(DX 20)
+			(DY 20)
+			(NX 30)
+			(NY 30)
+			(PPM_HEADER_LENGTH ,(length (let ((w 1024)
+							  (h 1280)
+							  (c 255))
+						      (format nil "P6 ~4d ~4d ~3d " w h c)))))
+
+		 (decl ((g_ppm_data 
+			 :type ,(format nil "std::array<unsigned char,~a>"
+					(emit-cpp :code `(+ PPM_HEADER_LENGTH 
+							    (* 3
+							       (* DX (- NX 1))
+							       (* DY (- NY 1)))))))))
+		 
+		 (function (toPPM (;(data :type "unsigned char*")
+				   (w :type int)
+				   (h :type int))
+				  void)
+			   (funcall g_ppm_data.fill 0)
+			   (funcall assert (<= w (* DX (- NX 1))))
+			   (funcall assert (<= h (* DY (- NY 1))))
+			   (funcall assert (<= w 9999))
+			   (funcall assert (<= h 9999))
+			   ;; "P6  580  580 255 "
+			   (let ((oss :type "std::ostringstream"))
+			     (<< oss
+				 (string "P6 ")
+				 (funcall "std::setw" 4) w (string " ")
+				 (funcall "std::setw" 4) h (string " ")
+				 (funcall "std::setw" 3) 255 (string " "))
+			     (funcall oss.seekg 0 "ios::end")
+			     (let ((size :init (funcall oss.tellg))
+				   (i :init 0))
+			       (funcall oss.seekg 0 "ios::beg")
+			       (for-range ((c :type "const auto") (funcall oss.str)) 
+					  (setf (aref g_ppm_data i) (funcall "static_cast<unsigned char>" c))
+					  (+= i 1)))
+			     )
+			   )
 		 
 		 (function ("CustomLineItem::CustomLineItem" ((line :type "const QLineF&"))
 							     nil 
@@ -78,6 +120,7 @@
 			    (setf m_pixmap_item (new (funcall QGraphicsPixmapItem this))
 				    m_pixmap (new (funcall QPixmap (* DX (- NX 1)) (* DY (- NY 1)))))
 			    (funcall m_pixmap->fill "Qt::green")
+			    (funcall toPPM (* DX (- NX 1)) (* DY (- NY 1)))
 			    ; (funcall m_pixmap_item->setZValue "std::numeric_limits<qreal>::min()")
 			    (funcall m_pixmap_item->setPixmap *m_pixmap))
 			   (let ((w :init 17)

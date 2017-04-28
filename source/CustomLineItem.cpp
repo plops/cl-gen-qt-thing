@@ -2,14 +2,46 @@
 #include <CustomRectItem.h>
 #include <QDebug>
 #include <QGraphicsScene>
-enum Coord { DX = 20, DY = 20, NX = 30, NY = 30 };
+#include <assert.h>
+#include <iomanip>
+#include <sstream>
+enum Coord { DX = 20, DY = 20, NX = 30, NY = 30, PPM_HEADER_LENGTH = 17 };
+
+std::array<unsigned char,
+           (PPM_HEADER_LENGTH + (3 * (DX * (NX - 1)) * (DY * (NY - 1))))>
+    g_ppm_data;
+
+void toPPM(int w, int h) {
+  g_ppm_data.fill(0);
+  assert((w <= (DX * (NX - 1))));
+  assert((h <= (DY * (NY - 1))));
+  assert((w <= 9999));
+  assert((h <= 9999));
+  {
+    std::ostringstream oss;
+
+    (oss << "P6 " << std::setw(4) << w << " " << std::setw(4) << h << " "
+         << std::setw(3) << 255 << " ");
+    oss.seekg(0, ios::end);
+    {
+      auto size = oss.tellg();
+      auto i = 0;
+
+      oss.seekg(0, ios::beg);
+      for (const auto c : oss.str()) {
+        g_ppm_data[i] = static_cast<unsigned char>(c);
+        i += 1;
+      }
+    }
+  }
+}
 
 CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
   m_pixmap_item = new QGraphicsPixmapItem(this);
   m_pixmap = new QPixmap((DX * (NX - 1)), (DY * (NY - 1)));
 
   m_pixmap->fill(Qt::green);
-  m_pixmap_item->setZValue(std::numeric_limits<qreal>::min());
+  toPPM((DX * (NX - 1)), (DY * (NY - 1)));
   m_pixmap_item->setPixmap(*m_pixmap);
 
   {
