@@ -106,15 +106,16 @@
 				   (funcall "std::setw" 4) h (string " ")
 				   (funcall "std::setw" 3) 255 (string " "))
 			       
-			       (let ((i0 :init 0))
+			       (let ((i0 :init 0)
+				     )
 				 (for-range ((c :type "const auto") (funcall oss.str)) 
 					    (setf (aref m_ppm_data i0) (funcall "static_cast<unsigned char>" c))
 					    (+= i0 1))
 				 (let ((sum :init i0))
-				  (dotimes (j h)
+				   (dotimes (j h)
 				    (dotimes (i w)
 				      (dotimes (k colors)
-					(setf (aref m_ppm_data (+ i0 k (* 3 (+ (* w j) i)))) (aref m_image k i j))
+					(setf (aref m_ppm_data (+ i0 k (* 3 (+ (* w j) i)))) (aref image k i j))
 					(+= sum 1))))
 				  (return sum))))))
 
@@ -132,12 +133,7 @@
 			       (funcall assert (funcall m_pixmap->loadFromData (funcall m_ppm_data.data) n ;(funcall m_ppm_data.size)
 							(string "PPM")
 							)))
-			     (let ((count :type "static int" :init 0))
-			      (if (== 0 (% count 2))
-				  (funcall m_pixmap_item->setPixmap *m_pixmap)
-				  (funcall m_pixmap_item->setPixmap (funcall QPixmap)))
-			      (+= count 1))
-			     )
+			     (funcall m_pixmap_item->setPixmap *m_pixmap))
 
 			   (<< (funcall qDebug) (string "thread id ") (funcall "QThread::currentThreadId"))
 			   ;(<< "std::cout"  (string "updatePixmapFromImage") "std::endl")
@@ -169,7 +165,7 @@
 						      false)))
 			     (funcall m_p2->setPos (funcall line.p2))
 			     )
-			   (statements
+			   #+nil (let ((image :type ,img-type))
 			    (dotimes (j IMG_H)
 			      (dotimes (i IMG_W)
 				(let nil
@@ -177,11 +173,11 @@
 										     (+ i .5s0)
 										     (+ j .5s0))))
 				     (vu :init (funcall "static_cast<unsigned char>" v)))
-				  (setf (aref m_image 0 i j) 255
-					(aref m_image 1 i j) (- 255 i)
-					(aref m_image 2 i j) 255))))
+				  (setf (aref image 0 i j) 255
+					(aref image 1 i j) (- 255 i)
+					(aref image 2 i j) 255))))
 			    
-			    (funcall updatePixmapFromImage m_image))
+			    (funcall updatePixmapFromImage image))
 			   
 
 			   (let ((pos :type "std::vector<std::pair<int,int> >" :init (list (list 1 1)
@@ -202,7 +198,7 @@
 			   (return (funcall "QGraphicsItem::itemChange" change value)))
 		 (function ("CustomLineItem::getPixels" () CustomItemPixelsGroup*)
 			   (return m_pixels))
-		 (function ("CustomLineItem::getImage" () ,img-type-ptr)
+		 #+nil (function ("CustomLineItem::getImage" () ,img-type-ptr)
 			   (return &m_image))
 		 (function ("CustomLineItem::setPixels" ((vecs :type "std::vector<std::pair<int,int> >")) void)
 			   (let ,(loop for e in '(dx dy nx ny) collect `(,e :init (funcall ,(format nil "m_pixels->~a" e))))
@@ -253,7 +249,7 @@
 			  #+nil (function (itemChange ((change :type GraphicsItemChange)
 						 (value :type "const QVariant&")) QVariant))
 			  (function (getPixels () CustomItemPixelsGroup*))
-			  (function (getImage () ,img-type-ptr))
+			  ;(function (getImage () ,img-type-ptr))
 			  (function (getImageItem () QGraphicsPixmapItem*))
 			  (function (setPixels ((vecs :type "std::vector<std::pair<int,int> >")) void))
 			  (function (updatePixmapFromImage ((image :type ,(format nil "~a&" img-type))) void))
@@ -272,7 +268,8 @@
 				  :type ,(format nil "std::array<unsigned char,~a>"
 						 (emit-cpp :code `(+ PPM_HEADER_LENGTH 
 								     PPM_IMAGE_BYTES))))
-				 (m_image :type ,img-type))))
+				 ;(m_image :type ,img-type)
+				 )))
 		   )))
     (write-source "CustomLineItem" "h" header)
     (write-source "CustomLineItem" "cpp" code))
@@ -320,17 +317,18 @@
 					  (statements
 					   (funcall pos.push_back (funcall "std::make_pair" i j))))))
 				  (funcall m_line->setPixels pos)
-				  (let ((img :type  "std::array<std::array<std::array<unsigned char,IMG_H>,IMG_W>,IMG_C>" :ctor (deref (funcall m_line->getImage))))
+				  (let ((img :type  "std::array<std::array<std::array<unsigned char,IMG_H>,IMG_W>,IMG_C>" ;:ctor (deref (funcall m_line->getImage))
+					     ))
 				   (dotimes (j IMG_H)
 				     (dotimes (i IMG_W)
 				       (let
-					(#+nil (v :init (funcall m_line->getDistanceFromPoint (funcall QPointF
+					((v :init (funcall m_line->getDistanceFromPoint (funcall QPointF
 												       (+ i .5s0)
 												       (+ j .5s0))))
-					       #+nil (vu :init (funcall "static_cast<unsigned char>" v)))
-					(setf (aref img 0 i j) 0
-					      (aref img 1 i j) 0
-					      (aref img 2 i j) 0))))
+					 (vu :init (funcall "static_cast<unsigned char>" (* v v))))
+					(setf (aref img 0 i j) 255-vu
+					      (aref img 1 i j) 255-vu
+					      (aref img 2 i j) 255-vu))))
 				   (<< "std::cout"  (string "rect :: item change") "std::endl")
 				   (funcall m_line->updatePixmapFromImage img)
 				   )

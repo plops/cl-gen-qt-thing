@@ -36,15 +36,18 @@ QVariant CustomRectItem::itemChange(GraphicsItemChange change,
       m_line->setPixels(pos);
       {
         std::array<std::array<std::array<unsigned char, IMG_H>, IMG_W>, IMG_C>
-            img((*(m_line->getImage())));
+            img;
 
         for (unsigned int j = 0; (j < IMG_H); j += 1) {
           for (unsigned int i = 0; (i < IMG_W); i += 1) {
             {
+              auto v = m_line->getDistanceFromPoint(
+                  QPointF((i + (5.e-1f)), (j + (5.e-1f))));
+              auto vu = static_cast<unsigned char>((v * v));
 
-              img[0][i][j] = 0;
-              img[1][i][j] = 0;
-              img[2][i][j] = 0;
+              img[0][i][j] = 255 - vu;
+              img[1][i][j] = 255 - vu;
+              img[2][i][j] = 255 - vu;
             }
           }
         }

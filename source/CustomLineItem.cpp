@@ -42,7 +42,7 @@ int CustomLineItem::createPPMHeader(
           for (unsigned int j = 0; (j < h); j += 1) {
             for (unsigned int i = 0; (i < w); i += 1) {
               for (unsigned int k = 0; (k < colors); k += 1) {
-                m_ppm_data[(i0 + k + (3 * ((w * j) + i)))] = m_image[k][i][j];
+                m_ppm_data[(i0 + k + (3 * ((w * j) + i)))] = image[k][i][j];
                 sum += 1;
               }
             }
@@ -69,17 +69,7 @@ void CustomLineItem::updatePixmapFromImage(
       assert(m_pixmap->loadFromData(m_ppm_data.data(), n, "PPM"));
     }
 
-    {
-      static int count = 0;
-
-      if ((0 == (count % 2))) {
-        m_pixmap_item->setPixmap(*m_pixmap);
-      } else {
-        m_pixmap_item->setPixmap(QPixmap());
-      }
-
-      count += 1;
-    }
+    m_pixmap_item->setPixmap(*m_pixmap);
   }
 
   (qDebug() << "thread id " << QThread::currentThreadId());
@@ -105,19 +95,6 @@ CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
     m_p2->setPos(line.p2());
   }
 
-  for (unsigned int j = 0; (j < IMG_H); j += 1) {
-    for (unsigned int i = 0; (i < IMG_W); i += 1) {
-      {
-
-        m_image[0][i][j] = 255;
-        m_image[1][i][j] = (255 - i);
-        m_image[2][i][j] = 255;
-      }
-    }
-  }
-
-  updatePixmapFromImage(m_image);
-
   {
     std::vector<std::pair<int, int>> pos = {{1, 1}, {2, 2}, {2, 3}};
 
@@ -126,11 +103,6 @@ CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
 }
 
 CustomItemPixelsGroup *CustomLineItem::getPixels() { return m_pixels; }
-
-std::array<std::array<std::array<unsigned char, IMG_H>, IMG_W>, IMG_C> *
-CustomLineItem::getImage() {
-  return &m_image;
-}
 
 void CustomLineItem::setPixels(std::vector<std::pair<int, int>> vecs) {
   {

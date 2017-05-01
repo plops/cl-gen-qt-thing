@@ -19,8 +19,6 @@ class CustomLineItem : public QGraphicsLineItem {
 public:
   explicit CustomLineItem(const QLineF &line);
   CustomItemPixelsGroup *getPixels();
-  std::array<std::array<std::array<unsigned char, IMG_H>, IMG_W>, IMG_C> *
-  getImage();
   QGraphicsPixmapItem *getImageItem();
   void setPixels(std::vector<std::pair<int, int>> vecs);
   void updatePixmapFromImage(
@@ -38,6 +36,4 @@ private:
   QGraphicsPixmapItem *m_pixmap_item = nullptr;
   QPixmap *m_pixmap = nullptr;
   std::array<unsigned char, (PPM_HEADER_LENGTH + PPM_IMAGE_BYTES)> m_ppm_data;
-  std::array<std::array<std::array<unsigned char, IMG_H>, IMG_W>, IMG_C>
-      m_image;
 };
