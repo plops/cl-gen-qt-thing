@@ -43,10 +43,20 @@ void CustomLineItem::updatePixmapFromImage() {
 
     createPPMHeader(w, h);
     assert(pixmap.loadFromData(m_ppm_data.data(), m_ppm_data.size(), "PPM"));
-    m_pixmap_item->setPixmap(pixmap);
+    {
+      static int count = 0;
+
+      if ((0 == (count % 2))) {
+        m_pixmap_item->setPixmap(pixmap);
+      } else {
+        m_pixmap_item->setPixmap(QPixmap());
+      }
+
+      count += 1;
+    }
   }
 
-  (std::cout << "updatePixmapFromImage" << std::endl);
+  (qDebug() << "thread id " << QThread::currentThreadId());
 }
 
 CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {

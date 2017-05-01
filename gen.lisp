@@ -105,9 +105,15 @@
 					 ))
 			     (funcall createPPMHeader w h)
 			     (funcall assert (funcall pixmap.loadFromData (funcall m_ppm_data.data) (funcall m_ppm_data.size) (string "PPM")))
-			     (funcall m_pixmap_item->setPixmap pixmap))
-			   
-			   (<< "std::cout"  (string "updatePixmapFromImage") "std::endl")
+			     (let ((count :type "static int" :init 0))
+			      (if (== 0 (% count 2))
+				  (funcall m_pixmap_item->setPixmap pixmap)
+				  (funcall m_pixmap_item->setPixmap (funcall QPixmap)))
+			      (+= count 1))
+			     )
+
+			   (<< (funcall qDebug) (string "thread id ") (funcall "QThread::currentThreadId"))
+			   ;(<< "std::cout"  (string "updatePixmapFromImage") "std::endl")
 			   )
 		 
 		 (function ("CustomLineItem::CustomLineItem" ((line :type "const QLineF&"))
@@ -493,6 +499,7 @@
 		      (return 0))
 		  (if (== nullptr argv)
 		      (return 0))
+		  ;(<< (funcall qDebug) (string "main thread id ") (funcall "QThread::currentThreadId"))
 		  (let ((a :type QApplication :ctor (comma-list argc argv))
 			(w :type QGraphicsView))
 		    (funcall w.setAttribute "Qt::WA_TranslucentBackground" false)
