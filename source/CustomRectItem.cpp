@@ -1,6 +1,7 @@
 #include <CustomLineItem.h>
 #include <CustomRectItem.h>
 #include <QGraphicsScene>
+#include <iostream>
 CustomRectItem::CustomRectItem(const QRectF &rect, QGraphicsItem *parent,
                                CustomLineItem *line, bool first_point_p)
     : m_line(line), m_first_point_p(first_point_p),
@@ -34,23 +35,20 @@ QVariant CustomRectItem::itemChange(GraphicsItemChange change,
 
       m_line->setPixels(pos);
       {
-        auto imgp = m_line->getImage();
-        auto img = *imgp;
+        std::array<unsigned char, PPM_IMAGE_BYTES> img((*(m_line->getImage())));
 
         for (unsigned int i = 0; (i < (DX * (NX - 1))); i += 1) {
           for (unsigned int j = 0; (j < (DY * (NY - 1))); j += 1) {
             {
-              auto v = m_line->getDistanceFromPoint(
-                  QPointF((i + (5.e-1f)), (j + (5.e-1f))));
-              auto vu = static_cast<unsigned char>(v);
 
-              img[(0 + (3 * (j + (i * (DX * (NX - 1))))))] = j;
-              img[(1 + (3 * (j + (i * (DX * (NX - 1))))))] = i;
-              img[(2 + (3 * (j + (i * (DX * (NX - 1))))))] = vu;
+              img[(0 + (3 * (j + (i * (DX * (NX - 1))))))] = 0;
+              img[(1 + (3 * (j + (i * (DX * (NX - 1))))))] = 0;
+              img[(2 + (3 * (j + (i * (DX * (NX - 1))))))] = 0;
             }
           }
         }
 
+        (std::cout << "rect :: item change" << std::endl);
         m_line->updatePixmapFromImage();
       }
     }

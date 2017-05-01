@@ -17,6 +17,7 @@ public:
   explicit CustomLineItem(const QLineF &line);
   CustomItemPixelsGroup *getPixels();
   std::array<unsigned char, PPM_IMAGE_BYTES> *getImage();
+  QGraphicsPixmapItem *getImageItem();
   void setPixels(std::vector<std::pair<int, int>> vecs);
   void updatePixmapFromImage();
   float getDistanceFromPoint(QPointF p0);
@@ -27,7 +28,6 @@ private:
   CustomRectItem *m_p2 = nullptr;
   CustomItemPixelsGroup *m_pixels = nullptr;
   QGraphicsPixmapItem *m_pixmap_item = nullptr;
-  QPixmap *m_pixmap = nullptr;
   std::array<unsigned char, (PPM_HEADER_LENGTH + PPM_IMAGE_BYTES)> m_ppm_data;
   std::array<unsigned char, PPM_IMAGE_BYTES> m_image;
 };

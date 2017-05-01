@@ -68,7 +68,7 @@
 		 (include <sstream>)
 		 (include <iomanip>)
 		 (include <iostream>)
-
+		 
 		 
 		 (include <utility>)
 		 (include <vector>)
@@ -99,18 +99,26 @@
 				 (setf (aref m_ppm_data (+ i j)) (aref m_image j))))))
 
 		 (function ("CustomLineItem::updatePixmapFromImage" () void)
-			   (funcall createPPMHeader (* DX (- NX 1)) (* DY (- NY 1)))
-			   (funcall assert (funcall m_pixmap->loadFromData (funcall m_ppm_data.data) (funcall m_ppm_data.size) (string "PPM")))
+			   (let ((w :init (* DX (- NX 1)))
+				 (h :init (* DY (- NY 1)))
+				 (pixmap :type QPixmap ; :ctor (comma-list w h)
+					 ))
+			     (funcall createPPMHeader w h)
+			     (funcall assert (funcall pixmap.loadFromData (funcall m_ppm_data.data) (funcall m_ppm_data.size) (string "PPM")))
+			     (funcall m_pixmap_item->setPixmap pixmap))
 			   
-			   
-			   (<< "std::cout"  (string "update") "std::endl"))
+			   (<< "std::cout"  (string "updatePixmapFromImage") "std::endl")
+			   )
 		 
 		 (function ("CustomLineItem::CustomLineItem" ((line :type "const QLineF&"))
 							     nil 
 							     :parent-ctor
 							     ((QGraphicsLineItem line)))
+			   (raw "// the order of initialization is important so that items are layered correctly. Unfortunately it is not possible to bring the line  (this object) above the pixmap")
 			   (setf m_pixmap_item (new (funcall QGraphicsPixmapItem this))
-				 m_pixmap (new (funcall QPixmap (* DX (- NX 1)) (* DY (- NY 1)))))
+				 ; m_pixmap (new (funcall QPixmap (* DX (- NX 1)) (* DY (- NY 1))))
+				 )
+			   
 			   (let ((w :init 17)
 				 (h :init w))
 			     (setf m_p1 (new (funcall CustomRectItem
@@ -132,22 +140,18 @@
 			   (statements
 			    
 					;(funcall m_pixmap->fill "Qt::green")
-			    (let (#+nil
-				  ( ;imgp :init &m_image ;(funcall this->getImage)
-				   )
-				  (img :init m_image))
-				   (dotimes (i (* DX (- NX 1)))
-				     (dotimes (j (* DY (- NY 1)))
-				       (let ;nil
-					((v :init (funcall getDistanceFromPoint (funcall QPointF
-										      (+ i .5s0)
-										      (+ j .5s0))))
-					 (vu :init (funcall "static_cast<unsigned char>" v)))
-					(setf (aref m_image (+ 0 (* 3 (+ j (* i (* DX (- NX 1))))))) j
-					      (aref m_image (+ 1 (* 3 (+ j (* i (* DX (- NX 1))))))) i
-					      (aref m_image (+ 2 (* 3 (+ j (* i (* DX (- NX 1))))))) 100))))
-				   
-				   (funcall updatePixmapFromImage))
+			    (dotimes (i (* DX (- NX 1)))
+			      (dotimes (j (* DY (- NY 1)))
+				(let ;nil
+				    ((v :init (funcall getDistanceFromPoint (funcall QPointF
+										     (+ i .5s0)
+										     (+ j .5s0))))
+				     (vu :init (funcall "static_cast<unsigned char>" v)))
+				  (setf (aref m_image (+ 0 (* 3 (+ j (* i (* DX (- NX 1))))))) 255
+					(aref m_image (+ 1 (* 3 (+ j (* i (* DX (- NX 1))))))) (- 255 i)
+					(aref m_image (+ 2 (* 3 (+ j (* i (* DX (- NX 1))))))) 255))))
+			    
+			    (funcall updatePixmapFromImage)
 			    #+nil
 			    (dotimes (i (* DX (- NX 1)))
 			      (dotimes (j (* DY (- NY 1)))
@@ -159,7 +163,7 @@
 
 			    
 			    ; (funcall m_pixmap_item->setZValue "std::numeric_limits<qreal>::min()")
-			    (funcall m_pixmap_item->setPixmap *m_pixmap)
+			    ;(funcall m_pixmap_item->setPixmap *m_pixmap)
 			    )
 			   
 
@@ -167,7 +171,9 @@
 											   (list 2 2)
 											   (list 2 3))))
 			     
-			     (setf m_pixels (new (funcall CustomItemPixelsGroup DX DY NX NX pos this)))))
+			     (setf m_pixels (new (funcall CustomItemPixelsGroup DX DY NX NX pos this))))
+			   
+			   )
 		 #+nil (function ("CustomLineItem::itemChange" ((change :type GraphicsItemChange)
 							  (value :type "const QVariant&")) QVariant)
 					;(<< (funcall qDebug) (string "change customLine ") (funcall this->pos) (string " ") value)
@@ -187,7 +193,7 @@
 			     (setf m_pixels (new (funcall CustomItemPixelsGroup
 							  dx dy nx ny
 							  vecs this)))))
-		 (raw "//! Computes distance from a point p0 to the line through the points m_p1 and m_p2. Make sure m_p1->m_line.{p1,p2} are initialized correctly before calling this function.")
+		 (raw "//! Computes distance from a point p0 to the line through the points m_p1 and m_p2. Make sure m_p{1,2}->pos are initialized correctly before calling this function.")
 		 (function ("CustomLineItem::getDistanceFromPoint" (;(line :type QLineF)
 						  (p0 :type QPointF))
 						 float)
@@ -202,7 +208,9 @@
 				 (a_p_dot_n :ctor (funcall "QVector2D::dotProduct" a_p n))
 				 )
 			     (return (funcall (slot-value (- a_p (* a_p_dot_n n))
-							  length)))))))
+							  length)))))
+		 (function ("CustomLineItem::getImageItem" () QGraphicsPixmapItem*)
+			   (return m_pixmap_item))))
 	(header `(with-compilation-unit
 		     (raw "#pragma once")
 		   (include <QtCore>)
@@ -228,6 +236,7 @@
 						 (value :type "const QVariant&")) QVariant))
 			  (function (getPixels () CustomItemPixelsGroup*))
 			  (function (getImage () "std::array<unsigned char,PPM_IMAGE_BYTES>*"))
+			  (function (getImageItem () QGraphicsPixmapItem*))
 			  (function (setPixels ((vecs :type "std::vector<std::pair<int,int> >")) void))
 			  (function (updatePixmapFromImage () void))
 			  (function (getDistanceFromPoint ((p0 :type QPointF))
@@ -241,7 +250,7 @@
 				 (m_p2 :type "CustomRectItem*" :init nullptr )
 				 (m_pixels :type "CustomItemPixelsGroup*" :init nullptr )
 				 (m_pixmap_item :type "QGraphicsPixmapItem*" :init nullptr)
-				 (m_pixmap :type "QPixmap*" :init nullptr)
+				 ;(m_pixmap :type "QPixmap*" :init nullptr)
 				 (m_ppm_data 
 				  :type ,(format nil "std::array<unsigned char,~a>"
 						 (emit-cpp :code `(+ PPM_HEADER_LENGTH 
@@ -255,6 +264,7 @@
 		   (include <CustomRectItem.h>)
 		 (include <QGraphicsScene>)
 		 (include <CustomLineItem.h>)
+		 (include <iostream>)
 		 (function ("CustomRectItem::CustomRectItem" ((rect :type "const QRectF&")
 							      (parent :type QGraphicsItem*)
 							      (line :type CustomLineItem*)
@@ -293,18 +303,18 @@
 					  (statements
 					   (funcall pos.push_back (funcall "std::make_pair" i j))))))
 				  (funcall m_line->setPixels pos)
-				  (let ((imgp :init (funcall m_line->getImage))
-					(img :init *imgp))
+				  (let ((img :type "std::array<unsigned char,PPM_IMAGE_BYTES>" :ctor (deref (funcall m_line->getImage))))
 				   (dotimes (i (* DX (- NX 1)))
 				     (dotimes (j (* DY (- NY 1)))
-				       (let ((v :init (funcall m_line->getDistanceFromPoint (funcall QPointF
-											  (+ i .5s0)
-											  (+ j .5s0))))
-					     (vu :init (funcall "static_cast<unsigned char>" v)))
-					(setf (aref img (+ 0 (* 3 (+ j (* i (* DX (- NX 1))))))) j
-					      (aref img (+ 1 (* 3 (+ j (* i (* DX (- NX 1))))))) i
-					      (aref img (+ 2 (* 3 (+ j (* i (* DX (- NX 1))))))) vu))))
-				   
+				       (let
+					(#+nil (v :init (funcall m_line->getDistanceFromPoint (funcall QPointF
+												       (+ i .5s0)
+												       (+ j .5s0))))
+					       #+nil (vu :init (funcall "static_cast<unsigned char>" v)))
+					(setf (aref img (+ 0 (* 3 (+ j (* i (* DX (- NX 1))))))) 0
+					      (aref img (+ 1 (* 3 (+ j (* i (* DX (- NX 1))))))) 0
+					      (aref img (+ 2 (* 3 (+ j (* i (* DX (- NX 1))))))) 0))))
+				   (<< "std::cout"  (string "rect :: item change") "std::endl")
 				   (funcall m_line->updatePixmapFromImage)))))
 			   (return (funcall "QGraphicsItem::itemChange" change value)))
 		 (function ("CustomRectItem::moveLineToCenter" ((newPos :type QPointF)) void)
@@ -542,6 +552,7 @@
 			  
 			  (let ((line :init (new (funcall CustomLineItem (funcall QLineF 40 40 80 80)))))
 			    (funcall scene->addItem line)
+			   (funcall line->setParentItem (funcall line->getImageItem))
 			    (raw "// initiate the line to some random ")
 					;(funcall handle_center->addLine line true)
 					;(funcall handle_periph->addLine line false)

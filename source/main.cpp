@@ -81,6 +81,7 @@ int main(int argc, char **argv) {
           auto line = new CustomLineItem(QLineF(40, 40, 80, 80));
 
           scene->addItem(line);
+          line->setParentItem(line->getImageItem());
           // initiate the line to some random ;
         }
 
