@@ -21,15 +21,19 @@ void CustomLineItem::createPPMHeader(int w, int h) {
     (oss << "P6 " << std::setw(4) << w << " " << std::setw(4) << h << " "
          << std::setw(3) << 255 << " ");
     {
-      auto i = 0;
+      auto i0 = 0;
 
       for (const auto c : oss.str()) {
-        m_ppm_data[i] = static_cast<unsigned char>(c);
-        i += 1;
+        m_ppm_data[i0] = static_cast<unsigned char>(c);
+        i0 += 1;
       }
 
-      for (unsigned int j = 0; (j < (w * h * 3)); j += 1) {
-        m_ppm_data[(i + j)] = m_image[j];
+      for (unsigned int j = 0; (j < h); j += 1) {
+        for (unsigned int i = 0; (i < w); i += 1) {
+          for (unsigned int k = 0; (k < 3); k += 1) {
+            m_ppm_data[(i0 + k + (3 * (i + (w * j))))] = m_image[k][i][j];
+          }
+        }
       }
     }
   }
@@ -39,15 +43,14 @@ void CustomLineItem::updatePixmapFromImage() {
   {
     auto w = (DX * (NX - 1));
     auto h = (DY * (NY - 1));
-    QPixmap pixmap;
 
     createPPMHeader(w, h);
-    assert(pixmap.loadFromData(m_ppm_data.data(), m_ppm_data.size(), "PPM"));
+    assert(m_pixmap->loadFromData(m_ppm_data.data(), m_ppm_data.size(), "PPM"));
     {
       static int count = 0;
 
       if ((0 == (count % 2))) {
-        m_pixmap_item->setPixmap(pixmap);
+        m_pixmap_item->setPixmap(*m_pixmap);
       } else {
         m_pixmap_item->setPixmap(QPixmap());
       }
@@ -65,6 +68,8 @@ CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
   // object) above the pixmap from within this constructor. Instead I have to
   // change the parents after object creation;
   m_pixmap_item = new QGraphicsPixmapItem(this);
+  m_pixmap = new QPixmap((DX * (NX - 1)), (DY * (NY - 1)));
+
   {
     auto w = 17;
     auto h = w;
@@ -83,9 +88,9 @@ CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
         auto v = getDistanceFromPoint(QPointF((i + (5.e-1f)), (j + (5.e-1f))));
         auto vu = static_cast<unsigned char>(v);
 
-        m_image[(0 + (3 * (j + (i * (DX * (NX - 1))))))] = 255;
-        m_image[(1 + (3 * (j + (i * (DX * (NX - 1))))))] = (255 - i);
-        m_image[(2 + (3 * (j + (i * (DX * (NX - 1))))))] = 255;
+        m_image[0][i][j] = 255;
+        m_image[1][i][j] = (255 - i);
+        m_image[2][i][j] = 255;
       }
     }
   }
@@ -101,7 +106,8 @@ CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
 
 CustomItemPixelsGroup *CustomLineItem::getPixels() { return m_pixels; }
 
-std::array<unsigned char, PPM_IMAGE_BYTES> *CustomLineItem::getImage() {
+std::array<std::array<std::array<unsigned char, IMG_C>, IMG_W>, IMG_H> *
+CustomLineItem::getImage() {
   return &m_image;
 }
 

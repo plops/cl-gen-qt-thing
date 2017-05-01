@@ -34,23 +34,6 @@ QVariant CustomRectItem::itemChange(GraphicsItemChange change,
       }
 
       m_line->setPixels(pos);
-      {
-        std::array<unsigned char, PPM_IMAGE_BYTES> img((*(m_line->getImage())));
-
-        for (unsigned int i = 0; (i < (DX * (NX - 1))); i += 1) {
-          for (unsigned int j = 0; (j < (DY * (NY - 1))); j += 1) {
-            {
-
-              img[(0 + (3 * (j + (i * (DX * (NX - 1))))))] = 0;
-              img[(1 + (3 * (j + (i * (DX * (NX - 1))))))] = 0;
-              img[(2 + (3 * (j + (i * (DX * (NX - 1))))))] = 0;
-            }
-          }
-        }
-
-        (std::cout << "rect :: item change" << std::endl);
-        m_line->updatePixmapFromImage();
-      }
     }
   }
 
