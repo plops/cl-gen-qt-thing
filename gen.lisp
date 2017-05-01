@@ -114,7 +114,7 @@
 							     nil 
 							     :parent-ctor
 							     ((QGraphicsLineItem line)))
-			   (raw "// the order of initialization is important so that items are layered correctly. Unfortunately it is not possible to bring the line  (this object) above the pixmap")
+			   (raw "// the order of initialization is important so that items are layered correctly. Unfortunately it is not possible to bring the line  (this object) above the pixmap from within this constructor. Instead I have to change the parents after object creation")
 			   (setf m_pixmap_item (new (funcall QGraphicsPixmapItem this))
 				 ; m_pixmap (new (funcall QPixmap (* DX (- NX 1)) (* DY (- NY 1))))
 				 )
@@ -551,8 +551,10 @@
 			  
 			  
 			  (let ((line :init (new (funcall CustomLineItem (funcall QLineF 40 40 80 80)))))
-			    (funcall scene->addItem line)
-			   (funcall line->setParentItem (funcall line->getImageItem))
+			    (raw "// the following reasignment of parents is required for the line to be drawn on top of the pixmap")
+			    (funcall "line->getImageItem()->setParentItem" nullptr)
+			    (funcall line->setParentItem (funcall line->getImageItem))
+			    (funcall scene->addItem (funcall line->getImageItem))
 			    (raw "// initiate the line to some random ")
 					;(funcall handle_center->addLine line true)
 					;(funcall handle_periph->addLine line false)

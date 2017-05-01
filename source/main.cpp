@@ -80,8 +80,11 @@ int main(int argc, char **argv) {
         {
           auto line = new CustomLineItem(QLineF(40, 40, 80, 80));
 
-          scene->addItem(line);
+          // the following reasignment of parents is required for the line to be
+          // drawn on top of the pixmap;
+          line->getImageItem()->setParentItem(nullptr);
           line->setParentItem(line->getImageItem());
+          scene->addItem(line->getImageItem());
           // initiate the line to some random ;
         }
 

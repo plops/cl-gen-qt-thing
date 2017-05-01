@@ -52,7 +52,8 @@ void CustomLineItem::updatePixmapFromImage() {
 CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
   // the order of initialization is important so that items are layered
   // correctly. Unfortunately it is not possible to bring the line  (this
-  // object) above the pixmap;
+  // object) above the pixmap from within this constructor. Instead I have to
+  // change the parents after object creation;
   m_pixmap_item = new QGraphicsPixmapItem(this);
   {
     auto w = 17;
