@@ -313,11 +313,11 @@
 						    (funcall m_line->getDistanceFromPoint (funcall QPointF
 												(* dx (+ i .5s0))
 												(* dy (+ j .5s0)))))
-					   (* .5s0 (funcall sqrtf (* dx dy))))
+					   (* 1.0s0 (funcall sqrtf (* dx dy))))
 					  (statements
 					   (funcall pos.push_back (funcall "std::make_pair" i j))))))
 				  (funcall m_line->setPixels pos)
-				  (let ((img :type  "std::array<std::array<std::array<unsigned char,IMG_H>,IMG_W>,IMG_C>" ;:ctor (deref (funcall m_line->getImage))
+				  (let ((img :type  "static std::array<std::array<std::array<unsigned char,IMG_H>,IMG_W>,IMG_C>" ;:ctor (deref (funcall m_line->getImage))
 					     ))
 				   (dotimes (j IMG_H)
 				     (dotimes (i IMG_W)
@@ -325,7 +325,8 @@
 					((v :init (funcall m_line->getDistanceFromPoint (funcall QPointF
 												       (+ i .5s0)
 												       (+ j .5s0))))
-					 (vu :init (funcall "static_cast<unsigned char>" (* v v))))
+					 (v2 :init (* v v))
+					 (vu :init (funcall "static_cast<unsigned char>" (? (< v2 100.0) v2 100))))
 					(setf (aref img 0 i j) 255-vu
 					      (aref img 1 i j) 255-vu
 					      (aref img 2 i j) 255-vu))))

@@ -27,7 +27,7 @@ QVariant CustomRectItem::itemChange(GraphicsItemChange change,
         for (unsigned int i = 0; (i < (nx - 1)); i += 1) {
           if ((fabsf(m_line->getDistanceFromPoint(
                    QPointF((dx * (i + (5.e-1f))), (dy * (j + (5.e-1f)))))) <
-               ((5.e-1f) * sqrtf((dx * dy))))) {
+               ((1.e+0f) * sqrtf((dx * dy))))) {
             pos.push_back(std::make_pair(i, j));
           }
         }
@@ -35,7 +35,8 @@ QVariant CustomRectItem::itemChange(GraphicsItemChange change,
 
       m_line->setPixels(pos);
       {
-        std::array<std::array<std::array<unsigned char, IMG_H>, IMG_W>, IMG_C>
+        static std::array<std::array<std::array<unsigned char, IMG_H>, IMG_W>,
+                          IMG_C>
             img;
 
         for (unsigned int j = 0; (j < IMG_H); j += 1) {
@@ -43,7 +44,9 @@ QVariant CustomRectItem::itemChange(GraphicsItemChange change,
             {
               auto v = m_line->getDistanceFromPoint(
                   QPointF((i + (5.e-1f)), (j + (5.e-1f))));
-              auto vu = static_cast<unsigned char>((v * v));
+              auto v2 = (v * v);
+              auto vu =
+                  static_cast<unsigned char>(((v2 < (1.e+2f))) ? (v2) : (100));
 
               img[0][i][j] = 255 - vu;
               img[1][i][j] = 255 - vu;
