@@ -9,43 +9,66 @@
 #include <sstream>
 #include <utility>
 #include <vector>
-void CustomLineItem::createPPMHeader(int w, int h) {
+int CustomLineItem::createPPMHeader(
+    std::array<std::array<std::array<unsigned char, IMG_H>, IMG_W>, IMG_C>
+        &image) {
   m_ppm_data.fill(0);
-  assert((w <= (DX * (NX - 1))));
-  assert((h <= (DY * (NY - 1))));
-  assert((w <= 9999));
-  assert((h <= 9999));
   {
-    std::ostringstream oss;
+    auto colors = image.size();
+    auto w = image[0].size();
+    auto h = image[0][0].size();
 
-    (oss << "P6 " << std::setw(4) << w << " " << std::setw(4) << h << " "
-         << std::setw(3) << 255 << " ");
+    assert((w <= (DX * (NX - 1))));
+    assert((h <= (DY * (NY - 1))));
+    assert((w <= 9999));
+    assert((h <= 9999));
+    assert((3 == colors));
     {
-      auto i0 = 0;
+      std::ostringstream oss;
 
-      for (const auto c : oss.str()) {
-        m_ppm_data[i0] = static_cast<unsigned char>(c);
-        i0 += 1;
-      }
+      (oss << "P6 " << std::setw(4) << w << " " << std::setw(4) << h << " "
+           << std::setw(3) << 255 << " ");
+      {
+        auto i0 = 0;
 
-      for (unsigned int j = 0; (j < h); j += 1) {
-        for (unsigned int i = 0; (i < w); i += 1) {
-          for (unsigned int k = 0; (k < 3); k += 1) {
-            m_ppm_data[(i0 + k + (3 * (i + (w * j))))] = m_image[k][i][j];
+        for (const auto c : oss.str()) {
+          m_ppm_data[i0] = static_cast<unsigned char>(c);
+          i0 += 1;
+        }
+
+        {
+          auto sum = i0;
+
+          for (unsigned int j = 0; (j < h); j += 1) {
+            for (unsigned int i = 0; (i < w); i += 1) {
+              for (unsigned int k = 0; (k < colors); k += 1) {
+                m_ppm_data[(i0 + k + (3 * ((w * j) + i)))] = m_image[k][i][j];
+                sum += 1;
+              }
+            }
           }
+
+          return sum;
         }
       }
     }
   }
 }
 
-void CustomLineItem::updatePixmapFromImage() {
+void CustomLineItem::updatePixmapFromImage(
+    std::array<std::array<std::array<unsigned char, IMG_H>, IMG_W>, IMG_C>
+        &image) {
   {
-    auto w = (DX * (NX - 1));
-    auto h = (DY * (NY - 1));
+    auto colors = image.size();
+    auto w = image[0].size();
+    auto h = image[0][0].size();
 
-    createPPMHeader(w, h);
-    assert(m_pixmap->loadFromData(m_ppm_data.data(), m_ppm_data.size(), "PPM"));
+    {
+      auto n(createPPMHeader(image));
+
+      assert(m_pixmap->loadFromData(m_ppm_data.data(), n, "PPM"));
+    }
+
     {
       static int count = 0;
 
@@ -68,7 +91,7 @@ CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
   // object) above the pixmap from within this constructor. Instead I have to
   // change the parents after object creation;
   m_pixmap_item = new QGraphicsPixmapItem(this);
-  m_pixmap = new QPixmap((DX * (NX - 1)), (DY * (NY - 1)));
+  m_pixmap = new QPixmap(IMG_W, IMG_H);
 
   {
     auto w = 17;
@@ -82,11 +105,9 @@ CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
     m_p2->setPos(line.p2());
   }
 
-  for (unsigned int i = 0; (i < (DX * (NX - 1))); i += 1) {
-    for (unsigned int j = 0; (j < (DY * (NY - 1))); j += 1) {
+  for (unsigned int j = 0; (j < IMG_H); j += 1) {
+    for (unsigned int i = 0; (i < IMG_W); i += 1) {
       {
-        auto v = getDistanceFromPoint(QPointF((i + (5.e-1f)), (j + (5.e-1f))));
-        auto vu = static_cast<unsigned char>(v);
 
         m_image[0][i][j] = 255;
         m_image[1][i][j] = (255 - i);
@@ -95,7 +116,7 @@ CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
     }
   }
 
-  updatePixmapFromImage();
+  updatePixmapFromImage(m_image);
 
   {
     std::vector<std::pair<int, int>> pos = {{1, 1}, {2, 2}, {2, 3}};
@@ -106,7 +127,7 @@ CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
 
 CustomItemPixelsGroup *CustomLineItem::getPixels() { return m_pixels; }
 
-std::array<std::array<std::array<unsigned char, IMG_C>, IMG_W>, IMG_H> *
+std::array<std::array<std::array<unsigned char, IMG_H>, IMG_W>, IMG_C> *
 CustomLineItem::getImage() {
   return &m_image;
 }

@@ -62,7 +62,9 @@
 (progn
   (defparameter *main-cpp-filename*  (merge-pathnames "stage/cl-gen-qt-thing/source/main.cpp"
 						      (user-homedir-pathname)))
-  (let (
+  (let* ((img-type "std::array<std::array<std::array<unsigned char,IMG_H>,IMG_W>,IMG_C>")
+	 (img-type-ptr (format nil "~a*" img-type))
+	 (img-type-ref (format nil "~a&" img-type))
 	(code `(with-compilation-unit
 		   
 		   (include <CustomLineItem.h>)
@@ -82,37 +84,54 @@
 
 		 
 		 
-		 (function ("CustomLineItem::createPPMHeader" ((w :type int) (h :type int))
-				  void)
+		 (function ("CustomLineItem::createPPMHeader" (
+							       (image :type ,img-type-ref)
+					;(w :type int) (h :type int)
+							       )
+							      int)
 			   (funcall m_ppm_data.fill 0)
-			   (funcall assert (<= w (* DX (- NX 1))))
-			   (funcall assert (<= h (* DY (- NY 1))))
-			   (funcall assert (<= w 9999))
-			   (funcall assert (<= h 9999))
-			   ;; "P6  580  580 255 "
-			   (let ((oss :type "std::ostringstream"))
-			     (<< oss
-				 (string "P6 ")
-				 (funcall "std::setw" 4) w (string " ")
-				 (funcall "std::setw" 4) h (string " ")
-				 (funcall "std::setw" 3) 255 (string " "))
-			     
-			     (let ((i0 :init 0))
-			       (for-range ((c :type "const auto") (funcall oss.str)) 
-					  (setf (aref m_ppm_data i0) (funcall "static_cast<unsigned char>" c))
-					  (+= i0 1))
-			       (dotimes (j h)
-				 (dotimes (i w)
-				  (dotimes (k 3)
-				    (setf (aref m_ppm_data (+ i0 k (* 3 (+ i (* w j))))) (aref m_image k i j))))))))
+			   (let ((colors :init (funcall image.size))
+				 (w :init (funcall (slot-value (aref image 0) size)))
+				 (h :init (funcall (slot-value (aref image 0 0) size))))
+			     (funcall assert (<= w (* DX (- NX 1))))
+			     (funcall assert (<= h (* DY (- NY 1))))
+			     (funcall assert (<= w 9999))
+			     (funcall assert (<= h 9999))
+			     (funcall assert (== 3 colors))
+			     ;; "P6  580  580 255 "
+			     (let ((oss :type "std::ostringstream"))
+			       (<< oss
+				   (string "P6 ")
+				   (funcall "std::setw" 4) w (string " ")
+				   (funcall "std::setw" 4) h (string " ")
+				   (funcall "std::setw" 3) 255 (string " "))
+			       
+			       (let ((i0 :init 0))
+				 (for-range ((c :type "const auto") (funcall oss.str)) 
+					    (setf (aref m_ppm_data i0) (funcall "static_cast<unsigned char>" c))
+					    (+= i0 1))
+				 (let ((sum :init i0))
+				  (dotimes (j h)
+				    (dotimes (i w)
+				      (dotimes (k colors)
+					(setf (aref m_ppm_data (+ i0 k (* 3 (+ (* w j) i)))) (aref m_image k i j))
+					(+= sum 1))))
+				  (return sum))))))
 
-		 (function ("CustomLineItem::updatePixmapFromImage" () void)
-			   (let    ((w :init (* DX (- NX 1)))
+		 (function ("CustomLineItem::updatePixmapFromImage" ((image :type ,img-type-ref
+									    )) void)
+			   (let    ((colors :init (funcall image.size))
+				 (w :init (funcall (slot-value (aref image 0) size)))
+				 (h :init (funcall (slot-value (aref image 0 0) size))))
+			     #+nil ((w :init (* DX (- NX 1)))
 				    (h :init (* DY (- NY 1)))
+				    
 				    #+nil (pixmap :type QPixmap ; :ctor (comma-list w h)
 					    ))
-			     (funcall createPPMHeader w h)
-			     (funcall assert (funcall m_pixmap->loadFromData (funcall m_ppm_data.data) (funcall m_ppm_data.size) (string "PPM")))
+			     (let ((n :ctor (funcall createPPMHeader image)))
+			       (funcall assert (funcall m_pixmap->loadFromData (funcall m_ppm_data.data) n ;(funcall m_ppm_data.size)
+							(string "PPM")
+							)))
 			     (let ((count :type "static int" :init 0))
 			      (if (== 0 (% count 2))
 				  (funcall m_pixmap_item->setPixmap *m_pixmap)
@@ -130,8 +149,7 @@
 							     ((QGraphicsLineItem line)))
 			   (raw "// the order of initialization is important so that items are layered correctly. Unfortunately it is not possible to bring the line  (this object) above the pixmap from within this constructor. Instead I have to change the parents after object creation")
 			   (setf m_pixmap_item (new (funcall QGraphicsPixmapItem this))
-				 m_pixmap (new (funcall QPixmap (* DX (- NX 1)) (* DY (- NY 1))))
-				 )
+				 m_pixmap (new (funcall QPixmap IMG_W IMG_H)))
 			   
 			   (let ((w :init 17)
 				 (h :init w))
@@ -152,12 +170,10 @@
 			     (funcall m_p2->setPos (funcall line.p2))
 			     )
 			   (statements
-			    
-					;(funcall m_pixmap->fill "Qt::green")
-			    (dotimes (i (* DX (- NX 1)))
-			      (dotimes (j (* DY (- NY 1)))
-				(let ;nil
-				    ((v :init (funcall getDistanceFromPoint (funcall QPointF
+			    (dotimes (j IMG_H)
+			      (dotimes (i IMG_W)
+				(let nil
+				    #+nil ((v :init (funcall getDistanceFromPoint (funcall QPointF
 										     (+ i .5s0)
 										     (+ j .5s0))))
 				     (vu :init (funcall "static_cast<unsigned char>" v)))
@@ -165,20 +181,7 @@
 					(aref m_image 1 i j) (- 255 i)
 					(aref m_image 2 i j) 255))))
 			    
-			    (funcall updatePixmapFromImage)
-			    #+nil
-			    (dotimes (i (* DX (- NX 1)))
-			      (dotimes (j (* DY (- NY 1)))
-				(setf (aref m_image (+ 0 (* 3 (+ j (* i (* DX (- NX 1))))))) i
-				      (aref m_image (+ 1 (* 3 (+ j (* i (* DX (- NX 1))))))) j
-				      (aref m_image (+ 2 (* 3 (+ j (* i (* DX (- NX 1))))))) 12)))
-			    
-			    #+nil (funcall updatePixmapFromImage)
-
-			    
-			    ; (funcall m_pixmap_item->setZValue "std::numeric_limits<qreal>::min()")
-			    ;(funcall m_pixmap_item->setPixmap *m_pixmap)
-			    )
+			    (funcall updatePixmapFromImage m_image))
 			   
 
 			   (let ((pos :type "std::vector<std::pair<int,int> >" :init (list (list 1 1)
@@ -199,7 +202,7 @@
 			   (return (funcall "QGraphicsItem::itemChange" change value)))
 		 (function ("CustomLineItem::getPixels" () CustomItemPixelsGroup*)
 			   (return m_pixels))
-		 (function ("CustomLineItem::getImage" () "std::array<std::array<std::array<unsigned char,IMG_C>,IMG_W>,IMG_H>*")
+		 (function ("CustomLineItem::getImage" () ,img-type-ptr)
 			   (return &m_image))
 		 (function ("CustomLineItem::setPixels" ((vecs :type "std::vector<std::pair<int,int> >")) void)
 			   (let ,(loop for e in '(dx dy nx ny) collect `(,e :init (funcall ,(format nil "m_pixels->~a" e))))
@@ -250,17 +253,16 @@
 			  #+nil (function (itemChange ((change :type GraphicsItemChange)
 						 (value :type "const QVariant&")) QVariant))
 			  (function (getPixels () CustomItemPixelsGroup*))
-			  (function (getImage () "std::array<std::array<std::array<unsigned char,IMG_C>,IMG_W>,IMG_H>*"))
+			  (function (getImage () ,img-type-ptr))
 			  (function (getImageItem () QGraphicsPixmapItem*))
 			  (function (setPixels ((vecs :type "std::vector<std::pair<int,int> >")) void))
-			  (function (updatePixmapFromImage () void))
+			  (function (updatePixmapFromImage ((image :type ,(format nil "~a&" img-type))) void))
 			  (function (getDistanceFromPoint ((p0 :type QPointF))
 						 float))
 			  (access-specifier private)
-			  (function (createPPMHeader (
-						      (w :type int)
-						      (h :type int))
-						     void))
+			  (function (createPPMHeader ((image :type ,img-type-ref)
+						      )
+						     int))
 			  (decl ((m_p1 :type "CustomRectItem*" :init nullptr )
 				 (m_p2 :type "CustomRectItem*" :init nullptr )
 				 (m_pixels :type "CustomItemPixelsGroup*" :init nullptr )
@@ -270,7 +272,7 @@
 				  :type ,(format nil "std::array<unsigned char,~a>"
 						 (emit-cpp :code `(+ PPM_HEADER_LENGTH 
 								     PPM_IMAGE_BYTES))))
-				 (m_image :type "std::array<std::array<std::array<unsigned char,IMG_C>,IMG_W>,IMG_H>"))))
+				 (m_image :type ,img-type))))
 		   )))
     (write-source "CustomLineItem" "h" header)
     (write-source "CustomLineItem" "cpp" code))
@@ -318,19 +320,21 @@
 					  (statements
 					   (funcall pos.push_back (funcall "std::make_pair" i j))))))
 				  (funcall m_line->setPixels pos)
-				  #+nil (let ((img :type "std::array<unsigned char,PPM_IMAGE_BYTES>" :ctor (deref (funcall m_line->getImage))))
-				   (dotimes (i (* DX (- NX 1)))
-				     (dotimes (j (* DY (- NY 1)))
+				  (let ((img :type  "std::array<std::array<std::array<unsigned char,IMG_H>,IMG_W>,IMG_C>" :ctor (deref (funcall m_line->getImage))))
+				   (dotimes (j IMG_H)
+				     (dotimes (i IMG_W)
 				       (let
 					(#+nil (v :init (funcall m_line->getDistanceFromPoint (funcall QPointF
 												       (+ i .5s0)
 												       (+ j .5s0))))
 					       #+nil (vu :init (funcall "static_cast<unsigned char>" v)))
-					(setf (aref img (+ 0 (* 3 (+ j (* i (* DX (- NX 1))))))) 0
-					      (aref img (+ 1 (* 3 (+ j (* i (* DX (- NX 1))))))) 0
-					      (aref img (+ 2 (* 3 (+ j (* i (* DX (- NX 1))))))) 0))))
+					(setf (aref img 0 i j) 0
+					      (aref img 1 i j) 0
+					      (aref img 2 i j) 0))))
 				   (<< "std::cout"  (string "rect :: item change") "std::endl")
-				   (funcall m_line->updatePixmapFromImage)))))
+				   (funcall m_line->updatePixmapFromImage img)
+				   )
+				  )))
 			   (return (funcall "QGraphicsItem::itemChange" change value)))
 		 (function ("CustomRectItem::moveLineToCenter" ((newPos :type QPointF)) void)
 			   (let ((p1 :init (? m_first_point_p newPos "m_line->line().p1()"))
