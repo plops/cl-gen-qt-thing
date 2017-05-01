@@ -4,10 +4,10 @@
 #include <QtCore>
 class CustomRectItem;
 enum Coord {
-  DX = 16,
-  DY = 16,
-  NX = 16,
-  NY = 16,
+  DX = 20,
+  DY = 20,
+  NX = 10,
+  NY = 10,
   PPM_IMAGE_BYTES = (3 * (DX * (NX - 1)) * (DY * (NY - 1))),
   PPM_HEADER_LENGTH = 17
 };
@@ -19,6 +19,7 @@ public:
   std::array<unsigned char, PPM_IMAGE_BYTES> *getImage();
   void setPixels(std::vector<std::pair<int, int>> vecs);
   void updatePixmapFromImage();
+  float getDistanceFromPoint(QPointF p0);
 
 private:
   void createPPMHeader(int w, int h);

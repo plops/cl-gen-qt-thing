@@ -70,6 +70,9 @@
 		 (include <iostream>)
 
 		 
+		 (include <utility>)
+		 (include <vector>)
+		 (include <QVector2D>)
 
 		 
 		 
@@ -106,9 +109,28 @@
 							     nil 
 							     :parent-ctor
 							     ((QGraphicsLineItem line)))
+			   (setf m_pixmap_item (new (funcall QGraphicsPixmapItem this))
+				 m_pixmap (new (funcall QPixmap (* DX (- NX 1)) (* DY (- NY 1)))))
+			   (let ((w :init 17)
+				 (h :init w))
+			     (setf m_p1 (new (funcall CustomRectItem
+						      ;; upper left corner and size
+						      (funcall QRectF (* -.5 (funcall QPointF w h))
+							       (funcall QSizeF w h))
+						      this
+						      this
+						      true)))
+			     (funcall m_p1->setPos (funcall line.p1))
+			     (setf m_p2 (new (funcall CustomRectItem
+						      (funcall QRectF (* -.5 (funcall QPointF w h))
+							       (funcall QSizeF w h))
+						      this
+						      this
+						      false)))
+			     (funcall m_p2->setPos (funcall line.p2))
+			     )
 			   (statements
-			    (setf m_pixmap_item (new (funcall QGraphicsPixmapItem this))
-				    m_pixmap (new (funcall QPixmap (* DX (- NX 1)) (* DY (- NY 1)))))
+			    
 					;(funcall m_pixmap->fill "Qt::green")
 			    (let (#+nil
 				  ( ;imgp :init &m_image ;(funcall this->getImage)
@@ -117,7 +139,7 @@
 				   (dotimes (i (* DX (- NX 1)))
 				     (dotimes (j (* DY (- NY 1)))
 				       (let ;nil
-					((v :init (funcall lineDistance line (funcall QPointF
+					((v :init (funcall getDistanceFromPoint (funcall QPointF
 										      (+ i .5s0)
 										      (+ j .5s0))))
 					 (vu :init (funcall "static_cast<unsigned char>" v)))
@@ -139,24 +161,7 @@
 			    ; (funcall m_pixmap_item->setZValue "std::numeric_limits<qreal>::min()")
 			    (funcall m_pixmap_item->setPixmap *m_pixmap)
 			    )
-			   (let ((w :init 17)
-				 (h :init w))
-			     (setf m_p1 (new (funcall CustomRectItem
-						      ;; upper left corner and size
-						      (funcall QRectF (* -.5 (funcall QPointF w h))
-							       (funcall QSizeF w h))
-						      this
-						      this
-						      true)))
-			     (funcall m_p1->setPos (funcall line.p1))
-			     (setf m_p2 (new (funcall CustomRectItem
-						      (funcall QRectF (* -.5 (funcall QPointF w h))
-							       (funcall QSizeF w h))
-						      this
-						      this
-						      false)))
-			     (funcall m_p2->setPos (funcall line.p2))
-			     )
+			   
 
 			   (let ((pos :type "std::vector<std::pair<int,int> >" :init (list (list 1 1)
 											   (list 2 2)
@@ -181,7 +186,23 @@
 			     (delete m_pixels)
 			     (setf m_pixels (new (funcall CustomItemPixelsGroup
 							  dx dy nx ny
-							  vecs this)))))))
+							  vecs this)))))
+		 (raw "//! Computes distance from a point p0 to the line through the points m_p1 and m_p2. Make sure m_p1->m_line.{p1,p2} are initialized correctly before calling this function.")
+		 (function ("CustomLineItem::getDistanceFromPoint" (;(line :type QLineF)
+						  (p0 :type QPointF))
+						 float)
+			   (raw "// https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line vector formulation")
+			   (let ((p1 :ctor (funcall m_p1->pos) ;(funcall line.p1)
+				   )
+				 (p2 :ctor (funcall m_p2->pos) ;(funcall line.p2)
+				   )
+				 (n_len :init (funcall QVector2D (- p1 p2)))
+				 (n :ctor (funcall (slot-value n_len  normalized)))
+				 (a_p :ctor (funcall QVector2D (- p1 p0)))
+				 (a_p_dot_n :ctor (funcall "QVector2D::dotProduct" a_p n))
+				 )
+			     (return (funcall (slot-value (- a_p (* a_p_dot_n n))
+							  length)))))))
 	(header `(with-compilation-unit
 		     (raw "#pragma once")
 		   (include <QtCore>)
@@ -189,10 +210,10 @@
 		   (include <CustomItemPixelsGroup.h>)
 		   (raw "class CustomRectItem;")
 		   (enum Coord
-			(DX 16)
-			(DY 16)
-			(NX 16)
-			(NY 16)
+			(DX 20)
+			(DY 20)
+			(NX 10)
+			(NY 10)
 			(PPM_IMAGE_BYTES (* 3
 					     (* DX (- NX 1))
 					     (* DY (- NY 1))))
@@ -209,6 +230,8 @@
 			  (function (getImage () "std::array<unsigned char,PPM_IMAGE_BYTES>*"))
 			  (function (setPixels ((vecs :type "std::vector<std::pair<int,int> >")) void))
 			  (function (updatePixmapFromImage () void))
+			  (function (getDistanceFromPoint ((p0 :type QPointF))
+						 float))
 			  (access-specifier private)
 			  (function (createPPMHeader (
 						      (w :type int)
@@ -231,9 +254,7 @@
   (let ((code `(with-compilation-unit
 		   (include <CustomRectItem.h>)
 		 (include <QGraphicsScene>)
-		 (include <utility>)
-		 (include <vector>)
-		 (include <QVector2D>)
+		 (include <CustomLineItem.h>)
 		 (function ("CustomRectItem::CustomRectItem" ((rect :type "const QRectF&")
 							      (parent :type QGraphicsItem*)
 							      (line :type CustomLineItem*)
@@ -246,20 +267,7 @@
 			   (funcall this->setFlag "QGraphicsItem::ItemIsMovable")
 			   (funcall this->setFlag "QGraphicsItem::ItemSendsScenePositionChanges"))
 
-		 (function (lineDistance ((line :type QLineF)
-					  (p0 :type QPointF))
-					 "inline float"
-					 )
-			   (raw "// https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line vector formulation")
-			   (let ((p1 :ctor (funcall line.p1))
-				 (p2 :ctor (funcall line.p2))
-				 (n_len :init (funcall QVector2D (- p1 p2)))
-				 (n :ctor (funcall (slot-value n_len  normalized)))
-				 (a_p :ctor (funcall QVector2D (- p1 p0)))
-				 (a_p_dot_n :ctor (funcall "QVector2D::dotProduct" a_p n))
-				 )
-			     (return (funcall (slot-value (- a_p (* a_p_dot_n n))
-							  length)))))
+		 
 
 		 
 		 (function ("CustomRectItem::itemChange" ((change :type GraphicsItemChange)
@@ -278,9 +286,9 @@
 				    (dotimes (i (- nx 1))
 				      (if (<
 					   (funcall fabsf
-						    (funcall lineDistance line (funcall QPointF
-											      (* dx (+ i .5s0))
-											      (* dy (+ j .5s0)))))
+						    (funcall m_line->getDistanceFromPoint (funcall QPointF
+												(* dx (+ i .5s0))
+												(* dy (+ j .5s0)))))
 					   (* .5s0 (funcall sqrtf (* dx dy))))
 					  (statements
 					   (funcall pos.push_back (funcall "std::make_pair" i j))))))
@@ -289,7 +297,7 @@
 					(img :init *imgp))
 				   (dotimes (i (* DX (- NX 1)))
 				     (dotimes (j (* DY (- NY 1)))
-				       (let ((v :init (funcall lineDistance line (funcall QPointF
+				       (let ((v :init (funcall m_line->getDistanceFromPoint (funcall QPointF
 											  (+ i .5s0)
 											  (+ j .5s0))))
 					     (vu :init (funcall "static_cast<unsigned char>" v)))
