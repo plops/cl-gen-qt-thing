@@ -33,19 +33,29 @@
 ;;     {{4,5,6}}
 ;; }};
 
+(defparameter *file-hashes* (make-hash-table))
+
+
 (defun write-source (name extension code)
-  (let ((fn (merge-pathnames (format nil "stage/cl-gen-qt-thing/source/~a.~a" name extension)
+  (let* ((fn (merge-pathnames (format nil "stage/cl-gen-qt-thing/source/~a.~a" name extension)
 			     (user-homedir-pathname)))
 	(code-str (emit-cpp
 		   :clear-env t
-		   :code 
-		   code)))
-    (with-open-file (s fn
-		       :direction :output
-		       :if-exists :supersede
-		       :if-does-not-exist :create)
-      (write-sequence code-str s))
-    (sb-ext:run-program "/usr/bin/clang-format" (list "-i" (namestring fn)))))
+		   :code code))
+	(fn-hash (sxhash fn))
+	 (code-hash (sxhash code-str)))
+    (multiple-value-bind (old-code-hash exists) (gethash fn-hash *file-hashes*)
+     (when (or (not exists) (/= code-hash old-code-hash))
+       ;; store the sxhash of the c source in the hash table
+       ;; *file-hashes* with the key formed by the sxhash of the full
+       ;; pathname
+       (setf (gethash fn-hash *file-hashes*) code-hash)
+       (with-open-file (s fn
+			  :direction :output
+			  :if-exists :supersede
+			  :if-does-not-exist :create)
+	 (write-sequence code-str s))
+       (sb-ext:run-program "/usr/bin/clang-format" (list "-i" (namestring fn)))))))
 
 (defun function-declarations (ls)
   (loop for e in ls collect
@@ -58,96 +68,6 @@
 	     )
 	 `(function (,name ,params ,ret :ctor ,ctor :specifier ,specifier :parent-ctor ,parent-ctor)))))
 
-
-(let ((header `(with-compilation-unit
-		     (raw "#pragma once")
-		   (include <QtCore>)
-		   (include <QGraphicsItem>)
-		   (include <CustomItemPixelsGroup.h>)
-		   (raw "class CustomRectItem;")
-		   (enum Coord
-			(DX 20)
-			(DY 20)
-			(NX 10)
-			(NY 10)
-			(IMG_C 3)
-			(IMG_W (* DX (- NX 1)))
-			(IMG_H (* DY (- NY 1)))
-			(PPM_IMAGE_BYTES (* IMG_C IMG_W IMG_H))
-			(PPM_HEADER_LENGTH ,(length (let ((w 1024)
-							  (h 1280)
-							  (c 255))
-						      (format nil "P6 ~4d ~4d ~3d " w h c)))))
-		   (class CustomLineItem ("public QGraphicsLineItem")
-			  (access-specifier public)
-			  (function (CustomLineItem ((line :type "const QLineF&"))  explicit))
-			  #+nil (function (itemChange ((change :type GraphicsItemChange)
-						 (value :type "const QVariant&")) QVariant))
-			  (function (getPixels () CustomItemPixelsGroup*))
-			  (function (getImageItem () QGraphicsPixmapItem*))
-			  (function (setPixels ((vecs :type "std::vector<std::pair<int,int> >")) void))
-			  (function (updatePixmapFromImage ((image :type tacff)) void))
-			  (function (getDistanceFromPoint ((p0 :type QPointF))
-						 float))
-			  (access-specifier private)
-			  (decl ((m_p1 :type "CustomRectItem*" :init nullptr )
-				 (m_p2 :type "CustomRectItem*" :init nullptr )
-				 (m_pixels :type "CustomItemPixelsGroup*" :init nullptr )
-				 (m_pixmap_item :type "QGraphicsPixmapItem*" :init nullptr)
-				 (m_pixmap :type "QPixmap*" :init nullptr)
-				 (m_ppm_data 
-				  :type ,(format nil "std::array<unsigned char,~a>"
-						 (emit-cpp :code `(+ PPM_HEADER_LENGTH 
-								     PPM_IMAGE_BYTES))))
-				 )))
-		   ))
-      (header2 `(with-compilation-unit
-		     (raw "#pragma once")
-		   (include <QtCore2>)
-		   (include <QGraphicsItem>)
-		   (include <CustomItemPixelsGroup.h>)
-		   (raw "class CustomRectItem;")
-		   (enum Coord
-			(DX 20)
-			(DY 20)
-			(NX 10)
-			(NY 10)
-			(IMG_C 3)
-			(IMG_W (* DX (- NX 1)))
-			(IMG_H (* DY (- NY 1)))
-			(PPM_IMAGE_BYTES (* IMG_C IMG_W IMG_H))
-			(PPM_HEADER_LENGTH ,(length (let ((w 1024)
-							  (h 1280)
-							  (c 255))
-						      (format nil "P6 ~4d ~4d ~3d " w h c)))))
-		   (class CustomLineItem ("public QGraphicsLineItem")
-			  (access-specifier public)
-			  (function (CustomLineItem ((line :type "const QLineF&"))  explicit))
-			  #+nil (function (itemChange ((change :type GraphicsItemChange)
-						 (value :type "const QVariant&")) QVariant))
-			  (function (getPixels () CustomItemPixelsGroup*))
-			  (function (getImageItem () QGraphicsPixmapItem*))
-			  (function (setPixels ((vecs :type "std::vector<std::pair<int,int> >")) void))
-			  (function (updatePixmapFromImage ((image :type tacff)) void))
-			  (function (getDistanceFromPoint ((p0 :type QPointF))
-						 float))
-			  (access-specifier private)
-			  (decl ((m_p1 :type "CustomRectItem*" :init nullptr )
-				 (m_p2 :type "CustomRectItem*" :init nullptr )
-				 (m_pixels :type "CustomItemPixelsGroup*" :init nullptr )
-				 (m_pixmap_item :type "QGraphicsPixmapItem*" :init nullptr)
-				 (m_pixmap :type "QPixmap*" :init nullptr)
-				 (m_ppm_data 
-				  :type ,(format nil "std::array<unsigned char,~a>"
-						 (emit-cpp :code `(+ PPM_HEADER_LENGTH 
-								     PPM_IMAGE_BYTES))))
-				 )))
-		   )))
-
-  (write-source "../../../../../dev/shm/header" "h" header)
-  (write-source "../../../../../dev/shm/header2" "h" header2)
-  
-  )
 
 (progn
   (defparameter *main-cpp-filename*  (merge-pathnames "stage/cl-gen-qt-thing/source/main.cpp"
@@ -516,16 +436,8 @@
 		      (m_ny :type "unsigned int")))))))
     (write-source "CustomItemPixelsGroup" "h" header)
     (write-source "CustomItemPixelsGroup" "cpp" code))
-  
-  (with-open-file (s *main-cpp-filename*
-		     :direction :output
-		     :if-exists :supersede
-		     :if-does-not-exist :create)
-    (emit-cpp
-     :str s
-     :clear-env t
-     :code 
-     `(with-compilation-unit
+
+  (let ((code `(with-compilation-unit
 					;(include <QtGui>)
 					; (include "main_win.h")
 	  (include <QtCore>)
@@ -702,8 +614,10 @@
 			  (funcall scene->addText (string "hello")))))
 		    (funcall w.show)
 		    
-		    (return (funcall a.exec)))))))
-  (sb-ext:run-program "/usr/bin/clang-format" (list "-i" (namestring *main-cpp-filename*))))
+		    (return (funcall a.exec)))))
+	  ))
+    (write-source "main" "cpp" code))
+  )
 
 
 
