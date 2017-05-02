@@ -5,7 +5,6 @@
 #include <QVector2D>
 #include <assert.h>
 #include <iomanip>
-#include <iostream>
 #include <sstream>
 #include <utility>
 #include <vector>
@@ -71,8 +70,6 @@ void CustomLineItem::updatePixmapFromImage(
 
     m_pixmap_item->setPixmap(*m_pixmap);
   }
-
-  (qDebug() << "thread id " << QThread::currentThreadId());
 }
 
 CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {

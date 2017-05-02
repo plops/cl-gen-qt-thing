@@ -1,7 +1,6 @@
 #include <CustomLineItem.h>
 #include <CustomRectItem.h>
 #include <QGraphicsScene>
-#include <iostream>
 CustomRectItem::CustomRectItem(const QRectF &rect, QGraphicsItem *parent,
                                CustomLineItem *line, bool first_point_p)
     : m_line(line), m_first_point_p(first_point_p),
@@ -55,7 +54,6 @@ QVariant CustomRectItem::itemChange(GraphicsItemChange change,
           }
         }
 
-        (std::cout << "rect :: item change" << std::endl);
         m_line->updatePixmapFromImage(img);
       }
     }
