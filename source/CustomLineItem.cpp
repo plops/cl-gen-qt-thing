@@ -8,6 +8,8 @@
 #include <sstream>
 #include <utility>
 #include <vector>
+//! Given an rgb color buffer in the form of a 3d std::array, construct a ppm
+//! header and copy the image data into a linear buffer.
 int CustomLineItem::createPPMHeader(
     std::array<std::array<std::array<unsigned char, IMG_H>, IMG_W>, IMG_C>
         &image) {
@@ -54,6 +56,10 @@ int CustomLineItem::createPPMHeader(
   }
 }
 
+//! A pixmap item is drawn below all the other things. This function takes an
+//! rgb color buffer in the form of a 3d std::array, constructs a ppm header and
+//! copies the data into the intermediate linear buffer m_ppm_data. Then it
+//! updates the pixmap.
 void CustomLineItem::updatePixmapFromImage(
     std::array<std::array<std::array<unsigned char, IMG_H>, IMG_W>, IMG_C>
         &image) {
@@ -99,8 +105,15 @@ CustomLineItem::CustomLineItem(const QLineF &line) : QGraphicsLineItem(line) {
   }
 }
 
+//! Return a pointer to a class that contains the pixels that are intersected by
+//! the line through the two control points.
 CustomItemPixelsGroup *CustomLineItem::getPixels() { return m_pixels; }
 
+//! Remove the selected pixels. Recompute which pixels are intersected by the
+//! line through the two control points and update the displayed pixel group.
+//! This is supposed to be called every time the control points change. This
+//! could be optimized to not unneccessarily touch pixels that are still being
+//! intersected.
 void CustomLineItem::setPixels(std::vector<std::pair<int, int>> vecs) {
   {
     auto dx = m_pixels->dx();

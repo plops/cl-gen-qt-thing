@@ -93,7 +93,7 @@
 		 (include <QVector2D>)
 
 		 
-		 
+		 (raw "//! Given an rgb color buffer in the form of a 3d std::array, construct a ppm header and copy the image data into a linear buffer.")
 		 (function ("CustomLineItem::createPPMHeader" (
 							       (image :type ,img-type-ref)
 					;(w :type int) (h :type int)
@@ -128,7 +128,7 @@
 					(setf (aref m_ppm_data (+ i0 k (* 3 (+ (* w j) i)))) (aref image k i j))
 					(+= sum 1))))
 				  (return sum))))))
-
+		 (raw "//! A pixmap item is drawn below all the other things. This function takes an rgb color buffer in the form of a 3d std::array, constructs a ppm header and copies the data into the intermediate linear buffer m_ppm_data. Then it updates the pixmap.")
 		 (function ("CustomLineItem::updatePixmapFromImage" ((image :type ,img-type-ref
 									    )) void)
 			   (let    ((colors :init (funcall image.size))
@@ -206,10 +206,12 @@
 				(raw "// value is the same as pos()")
 				(<< (funcall qDebug) (string "change pos customLine ") (funcall this->pos) (string " ") value)))
 			   (return (funcall "QGraphicsItem::itemChange" change value)))
+		 (raw "//! Return a pointer to a class that contains the pixels that are intersected by the line through the two control points.")
 		 (function ("CustomLineItem::getPixels" () CustomItemPixelsGroup*)
 			   (return m_pixels))
 		 #+nil (function ("CustomLineItem::getImage" () ,img-type-ptr)
-			   (return &m_image))
+				 (return &m_image))
+		 (raw "//! Remove the selected pixels. Recompute which pixels are intersected by the line through the two control points and update the displayed pixel group. This is supposed to be called every time the control points change. This could be optimized to not unneccessarily touch pixels that are still being intersected.")
 		 (function ("CustomLineItem::setPixels" ((vecs :type "std::vector<std::pair<int,int> >")) void)
 			   (let ,(loop for e in '(dx dy nx ny) collect `(,e :init (funcall ,(format nil "m_pixels->~a" e))))
 			     (delete m_pixels)
@@ -232,6 +234,7 @@
 				 )
 			     (return (funcall (slot-value (- a_p (* a_p_dot_n n))
 							  length)))))
+		 (raw "//! Return a pointer to the pixmap item. This is required to change the parenthood ")
 		 (function ("CustomLineItem::getImageItem" () QGraphicsPixmapItem*)
 			   (return m_pixmap_item))))
 	 (header `(with-compilation-unit
